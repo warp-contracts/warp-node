@@ -8,8 +8,6 @@ import {connect} from "../db/connect";
 import networkRouter from "./routes/networkRouter";
 import {initArweave} from "../node/arweave";
 import Arweave from "arweave";
-import {gateway, initGatewayDb} from "./gateway/gateway";
-import gatewayRouter from "./gateway/gatewayRouter";
 
 require("dotenv").config();
 
@@ -45,25 +43,17 @@ declare module "koa" {
   LoggerFactory.use(new TsLogFactory());
   LoggerFactory.INST.logLevel("info");
   LoggerFactory.INST.logLevel("debug", "network");
-  LoggerFactory.INST.logLevel("debug", "gateway");
 
   const networkLogger = LoggerFactory.INST.create("network");
-  const gatewayLogger = LoggerFactory.INST.create("gateway");
   networkLogger.info(`Starting`);
 
   const app = new Koa();
-
   const db = connect(port, "network", path.join("db", "network"));
   await init(db);
 
-  const gatewayDb = connect(port, "gateway", path.join("db", "network"));
-  await initGatewayDb(gatewayDb);
-
   const arweave = initArweave();
   app.context.db = db;
-  app.context.gatewayDb = gatewayDb;
   app.context.logger = networkLogger;
-  app.context.gatewayLogger = gatewayLogger;
   app.context.arweave = arweave;
 
   app.use(cors());
@@ -80,15 +70,7 @@ declare module "koa" {
   }))
   app.use(networkRouter.routes());
   app.use(networkRouter.allowedMethods());
-  app.use(gatewayRouter.routes());
-  app.use(gatewayRouter.allowedMethods());
-
   app.listen(port);
   networkLogger.info(`Listening on port ${port}`);
 
-  try {
-    await gateway(app.context);
-  } catch (e: any) {
-    networkLogger.error('Error from gateway', e.message);
-  }
 })();

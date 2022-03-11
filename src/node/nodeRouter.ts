@@ -8,6 +8,5 @@ const nodeRouter = new Router();
 nodeRouter.get("/info", infoRoute);
 nodeRouter.post("/current-state", currentState);
 nodeRouter.post("/gossip", gossipRoute);
-// TODO: /graphql
 
 export default nodeRouter;

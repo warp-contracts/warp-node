@@ -18,8 +18,6 @@ export const snowball = async (
   height: number,
   hash: string
 ) => {
-  // TODO: add funny snowball icon %)
-  // - What are you, eight?
   ctx.logger.info(`Starting snowball consensus on`, {
     contract: contractId,
     height,
