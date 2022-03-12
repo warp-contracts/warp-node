@@ -409,14 +409,6 @@ array-union@^2.1.0:
   resolved "https://registry.yarnpkg.com/array-union/-/array-union-2.1.0.tgz#b798420adbeb1de828d84acd8a2e23d3efe85e8d"
   integrity sha512-HGyxoOTYUyCM6stUe6EJgnd4EoewAI7zMdfqO+kGjnlZmBDz/cR5pf8r/cR4Wq60sL/p0IkcjUEEPwS3GFrIyw==
 
-arweave-multihost@^0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/arweave-multihost/-/arweave-multihost-0.1.0.tgz#6f5dd1f42638dad8414cb20c0a19fee0a6a59844"
-  integrity sha512-biIkzQ3oc4RLV1MORQnqWz51IazP++K/8SsYMjUokK0cUfBLqom4pufKFCjTkGQIZMWWanXxnZqL66hHPgTCgA==
-  dependencies:
-    arweave "^1.10.15"
-    axios "^0.21.1"
-
 arweave@1.10.23:
   version "1.10.23"
   resolved "https://registry.yarnpkg.com/arweave/-/arweave-1.10.23.tgz#6edc056026d6c11ec47d817bb2c4f6d8fb8c65e5"
@@ -429,7 +421,7 @@ arweave@1.10.23:
     bignumber.js "^9.0.1"
     util "^0.12.4"
 
-arweave@^1.10.13, arweave@^1.10.15:
+arweave@^1.10.13:
   version "1.10.18"
   resolved "https://registry.yarnpkg.com/arweave/-/arweave-1.10.18.tgz#3042edd1afa52b7c3caeacf88271758232c7b866"
   integrity sha512-i3pKBkLtU1Jl9RtJ9A6zgz8QqF5FZy7YA+qGQ9i2Zug171p29FTDZhN+KlRcVBg8sEgd1DKyecCCYJZ3K6Jdfg==
@@ -488,13 +480,6 @@ axios@0.24.0:
   integrity sha512-Q6cWsys88HoPgAaFAVUb0WpPk0O8iTeisR9IMqy9G8AbO4NlpVknrnQS03zzF9PGAWgO3cgletO3VjV/P7VztA==
   dependencies:
     follow-redirects "^1.14.4"
-
-axios@^0.21.1, axios@^0.21.4:
-  version "0.21.4"
-  resolved "https://registry.yarnpkg.com/axios/-/axios-0.21.4.tgz#c67b90dc0568e5c1cf2b0b858c43ba28e2eda575"
-  integrity sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==
-  dependencies:
-    follow-redirects "^1.14.0"
 
 axios@^0.22.0:
   version "0.22.0"
@@ -1168,7 +1153,7 @@ flatted@^3.1.0:
   resolved "https://registry.yarnpkg.com/flatted/-/flatted-3.2.4.tgz#28d9969ea90661b5134259f312ab6aa7929ac5e2"
   integrity sha512-8/sOawo8tJ4QOBX8YlQBMxL8+RLZfxMQOif9o0KUKTNTjMYElWPE0r/m5VNFxTRd0NSw8qSy8dajrwX4RYI1Hw==
 
-follow-redirects@^1.14.0, follow-redirects@^1.14.4:
+follow-redirects@^1.14.4:
   version "1.14.5"
   resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.14.5.tgz#f09a5848981d3c772b5392309778523f8d85c381"
   integrity sha512-wtphSXy7d4/OR+MvIFbCVBDzZ5520qV8XfPklSN5QtxuMUJZ+b0Wnst1e1lCDocfzuCkHqj8k0FpZqO+UIaKNA==
@@ -1940,7 +1925,7 @@ node-addon-api@^3.0.0:
   resolved "https://registry.yarnpkg.com/node-addon-api/-/node-addon-api-3.2.1.tgz#81325e0a2117789c0128dab65e7e38f07ceba161"
   integrity sha512-mmcei9JghVNDYydghQmeDX8KoAm0FAiYyIcUt/N4nhyAipB17pllZQDOJD2fotxABnt4Mdz+dKTO7eftLg4d0A==
 
-node-fetch@*, node-fetch@3.1.0:
+node-fetch@*:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-3.1.0.tgz#714f4922dc270239487654eaeeab86b8206cb52e"
   integrity sha512-QU0WbIfMUjd5+MUzQOYhenAazakV7Irh1SGkWCsRzBwvm4fAhzEUaHMJ6QLP7gWT6WO9/oH2zhKMMGMuIrDyKw==
@@ -2269,14 +2254,14 @@ rechoir@0.7.0:
   dependencies:
     resolve "^1.9.0"
 
-redstone-isomorphic@1.1.1:
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/redstone-isomorphic/-/redstone-isomorphic-1.1.1.tgz#48c2f8ba98bf053bec98242cbfdce7aaad46aeee"
-  integrity sha512-Xwg82SWj6MTAWRNgHCNdh+2fTvqRywhy4eK33/oedbvhAPrQR6yWmiXVcf0X3fZMQA67kLMiTgy+QyjDvmw5UQ==
+redstone-isomorphic@1.1.4:
+  version "1.1.4"
+  resolved "https://registry.yarnpkg.com/redstone-isomorphic/-/redstone-isomorphic-1.1.4.tgz#3439ed5e14cbe0df5ad06da5bbf21089de282e71"
+  integrity sha512-7K6zAQldh0SRkjxLSrtfMnMiVylWEVI1MHScJIYww6PfQePe9pe1jIkXncKswfKXtIWkZEdriiuQc8sCVTROtw==
   dependencies:
     buffer "^6.0.3"
     safe-buffer "^5.1.2"
-    undici "^4.12.2"
+    undici "^4.15.1"
 
 redstone-isomorphic@^1.1.0:
   version "1.1.2"
@@ -2287,26 +2272,23 @@ redstone-isomorphic@^1.1.0:
     safe-buffer "^5.1.2"
     undici "^4.12.2"
 
-redstone-smartweave@0.4.40:
-  version "0.4.40"
-  resolved "https://registry.yarnpkg.com/redstone-smartweave/-/redstone-smartweave-0.4.40.tgz#79ad632237a33bc03297dce1780ac0f3529c42bd"
-  integrity sha512-o7fgmyphwsu6p9RMFEzsydavGMgcY/8968DTzIi9s4CVZGFr+dpWINDCY0osrhqiqeD9NwRzFl16NEEggzM+wA==
+redstone-smartweave@0.4.43:
+  version "0.4.43"
+  resolved "https://registry.yarnpkg.com/redstone-smartweave/-/redstone-smartweave-0.4.43.tgz#ea5c2b7af3d494d0013c83ae668224f9259b248e"
+  integrity sha512-dC4iDqEnuUDNMX6U8vAlsO8GUrKzO3tfnR4BaQ0OJW+/OTGXhYdhCAMfLyKIK11kXWZd6P3I3yHJe2grOHvwgQ==
   dependencies:
     "@assemblyscript/loader" "^0.19.23"
     "@weavery/clarity" "^0.1.5"
     arweave "1.10.23"
-    arweave-multihost "^0.1.0"
-    axios "^0.21.4"
     bignumber.js "^9.0.1"
     fast-copy "^2.1.1"
     json-beautify "^1.1.1"
     knex "^0.95.14"
     lodash "^4.17.21"
-    redstone-isomorphic "1.1.1"
+    redstone-isomorphic "1.1.4"
     redstone-wasm-metering "1.0.0"
     safe-stable-stringify "2.3.1"
     tslog "^3.2.2"
-    undici "^4.12.2"
 
 redstone-wasm-json-toolkit@1.0.0:
   version "1.0.0"
@@ -2779,7 +2761,7 @@ unbox-primitive@^1.0.1:
     has-symbols "^1.0.2"
     which-boxed-primitive "^1.0.2"
 
-undici@^4.12.2:
+undici@4.15.1, undici@^4.12.2, undici@^4.15.1:
   version "4.15.1"
   resolved "https://registry.yarnpkg.com/undici/-/undici-4.15.1.tgz#c2c0e75f232178f0e6781f6b46c81ccc15065f6e"
   integrity sha512-h8LJybhMKD09IyQZoQadNtIR/GmugVhTOVREunJrpV6RStriKBFdSVoFzEzTihwXi/27DIBO+Z0OGF+Mzfi0lA==

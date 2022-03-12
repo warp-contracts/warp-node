@@ -5,7 +5,7 @@ import bodyParser from "koa-bodyparser";
 import {LoggerFactory, RedStoneLogger} from "redstone-smartweave";
 import {TsLogFactory} from "redstone-smartweave/lib/cjs/logging/node/TsLogFactory";
 import {connect} from "../db/connect";
-import networkRouter from "./routes/networkRouter";
+import validatorRouter from "./routes/validatorRouter";
 import {initArweave} from "../node/arweave";
 import Arweave from "arweave";
 
@@ -68,8 +68,8 @@ declare module "koa" {
     },
     br: false // disable brotli
   }))
-  app.use(networkRouter.routes());
-  app.use(networkRouter.allowedMethods());
+  app.use(validatorRouter.routes());
+  app.use(validatorRouter.allowedMethods());
   app.listen(port);
   networkLogger.info(`Listening on port ${port}`);
 

@@ -1,104 +1,103 @@
 import * as path from "path";
-import { Knex } from "knex";
+import {Knex} from "knex";
 import Koa from "koa";
 import bodyParser from "koa-bodyparser";
-import { connect } from "../db/connect";
+import {connect} from "../db/connect";
 import nodeRouter from "./nodeRouter";
-import {
-  LoggerFactory,
-  RedStoneLogger,
-  SmartWeave,
-  SmartWeaveNodeFactory,
-} from "redstone-smartweave";
-import { TsLogFactory } from "redstone-smartweave/lib/cjs/logging/node/TsLogFactory";
+import {LoggerFactory, RedStoneLogger, SmartWeave, SmartWeaveNodeFactory,} from "redstone-smartweave";
+import {TsLogFactory} from "redstone-smartweave/lib/cjs/logging/node/TsLogFactory";
 import axios from "axios";
-import { initArweave } from "./arweave";
+import {initArweave} from "./arweave";
 import Arweave from "arweave";
+import * as os from "os";
 
 require("dotenv").config();
 
 declare module "koa" {
-  interface BaseContext {
-    db: Knex;
-    gatewayDb: Knex;
-    sdk: SmartWeave;
-    logger: RedStoneLogger;
-    whoami: NodeData;
-    network: string;
-    arweave: Arweave;
-    port: number;
-  }
+    interface BaseContext {
+        db: Knex;
+        gatewayDb: Knex;
+        sdk: SmartWeave;
+        logger: RedStoneLogger;
+        whoami: NodeData;
+        network: string;
+        arweave: Arweave;
+        port: number;
+    }
 }
 
 export type NodeData = {
-  id: string;
-  address: string;
+    id: string;
+    address: string;
 };
 
 export async function register(
-  nodeId: string,
-  address: string,
-  networkAddress: string
+    nodeId: string,
+    address: string,
+    networkAddress: string
 ) {
-  // TODO: retries
-  await axios.post(`${networkAddress}/register`, {
-    nodeId,
-    address,
-  });
+    // TODO: retries
+    await axios.post(`${networkAddress}/network/register`, {
+        nodeId,
+        address,
+    });
 }
 
 export async function unregister(nodeId: string, networkAddress: string) {
-  // TODO: retries
-  console.log('unregister', nodeId, networkAddress);
-  await axios.post(`${networkAddress}/unregister`, {
-    nodeId,
-  });
+    // TODO: retries
+    console.log('unregister', nodeId, networkAddress);
+    await axios.post(`${networkAddress}/network/unregister`, {
+        nodeId,
+    });
 }
 
 (async () => {
-  const port = parseInt((process.env.PORT || 4242).toString());
-  const nodeId = `Node_${port}`;
-  const address = `http://localhost:${port}`;
-  const networkAddress = `http://localhost:5666`;
+    const port = parseInt((process.env.PORT || 4242).toString());
+    const nodeId = `Node_${os.hostname()}_${port}`;
+    const address = `http://localhost:${port}`;
+    const networkAddress = `http://localhost:5666`;
 
-  LoggerFactory.use(new TsLogFactory());
-  LoggerFactory.INST.setOptions({
-    displayInstanceName: true,
-    instanceName: nodeId,
-    moduleName: false,
-  });
-  LoggerFactory.INST.logLevel("error");
-  LoggerFactory.INST.logLevel("debug", "node");
-  const logger = LoggerFactory.INST.create("node");
+    LoggerFactory.use(new TsLogFactory());
+    LoggerFactory.INST.setOptions({
+        displayInstanceName: true,
+        instanceName: nodeId,
+        moduleName: false,
+    });
+    LoggerFactory.INST.logLevel("error");
+    LoggerFactory.INST.logLevel("debug", "node");
+    const logger = LoggerFactory.INST.create("node");
 
-  logger.info(`====== Starting ======`);
+    logger.info(`====== Starting ======`);
 
-  const app = new Koa();
-  const db = connect(port, "state", path.join("db", "peers"));
-  const arweave = initArweave();
+    const app = new Koa();
+    const db = connect(port, "state", path.join("db", "peers"));
+    const arweave = initArweave();
 
-  app.context.db = db;
-  app.context.arweave = arweave;
-  app.context.sdk = await SmartWeaveNodeFactory.knexCached(arweave, db);
-  app.context.logger = logger;
-  app.context.whoami = { id: nodeId, address };
-  app.context.network = networkAddress;
-  app.context.port = port;
+    app.context.db = db;
+    app.context.arweave = arweave;
+    app.context.sdk = (await SmartWeaveNodeFactory.knexCachedBased(arweave, db))
+        .useRedStoneGateway({notCorrupted: true})
+        .build();
 
-  app.use(bodyParser());
-  app.use(nodeRouter.routes());
+    app.context.logger = logger;
+    app.context.whoami = {id: nodeId, address};
+    app.context.network = networkAddress;
+    app.context.port = port;
 
-  app.listen(port);
+    app.use(bodyParser());
+    app.use(nodeRouter.routes());
 
-  await register(nodeId, address, networkAddress);
-  process.on("exit", async () => {
-    await unregister(nodeId, networkAddress);
-    process.exit();
-  });
-  process.on("SIGINT", async () => {
-    await unregister(nodeId, networkAddress);
-    process.exit();
-  });
+    app.listen(port);
 
-  logger.info(`Listening on port ${port}`);
+    await register(nodeId, address, networkAddress);
+    process.on("exit", async () => {
+        await unregister(nodeId, networkAddress);
+        process.exit();
+    });
+    process.on("SIGINT", async () => {
+        await unregister(nodeId, networkAddress);
+        process.exit();
+    });
+
+    logger.info(`Listening on port ${port}`);
 })();

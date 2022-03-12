@@ -32,7 +32,7 @@ export const snowball = async (
   const internalCounts: { [item: string]: number } = {};
 
   const activePeers: { id: string; address: string }[] = (
-    await axios.get(`${ctx.network}/other-peers?askingNode=${ctx.nodeId}`)
+    await axios.get(`${ctx.network}/network/other-peers?askingNode=${ctx.nodeId}`)
   ).data;
 
   ctx.logger.debug("All active peers", activePeers);
