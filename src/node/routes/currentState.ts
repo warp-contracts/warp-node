@@ -13,6 +13,7 @@ export const currentState = async (ctx: Router.RouterContext) => {
     await ctx.sdk.contract(contractId).readState();
 
     // load evaluated hash from db
+    // TODO: return directly from SDK?
     const result = (
       await ctx.db
         .select("height", "state", "hash")

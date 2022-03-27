@@ -1,5 +1,5 @@
 import Router from "@koa/router";
-import { NodeData } from "../init";
+import {NodeData} from "../ExecutionNode";
 
 export type GossipQueryResult = {
   peer: NodeData;

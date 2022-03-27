@@ -2,8 +2,9 @@
   "scripts": {
     "dev:network:start": "ts-node-dev src/validator/init.ts",
     "dev:network:watch": "ts-node-dev --watch -- src/validator/init.ts",
+    "dev:node:watch": "ts-node-dev --watch -- src/node/init.ts --url='http://localhost' --networkId='ppe_localhost' --networkContractId='VQkLjOCjFkzobvPeixBtTSNC7wx-6SRGQWZaB3lZ0GM'",
     "build": "tsc",
-    "start:node": "node dist/node/init.js",
+    "start:node": "node dist/node/init.js --url='http://localhost' --networkId='ppe_localhost' --networkContractId='VQkLjOCjFkzobvPeixBtTSNC7wx-6SRGQWZaB3lZ0GM'",
     "start:validator": "node dist/validator/init.js",
     "format": "prettier --write ."
   },
@@ -12,16 +13,20 @@
   "dependencies": {
     "@koa/cors": "^3.1.0",
     "@koa/router": "10.1.1",
+    "@types/yargs": "^17.0.9",
     "arweave": "1.10.23",
     "axios": "0.24.0",
+    "catch-exit": "^1.2.2",
     "dotenv": "10.0.0",
     "knex": "0.95.14",
     "koa": "2.13.4",
     "koa-bodyparser": "4.3.0",
     "koa-compress": "^5.1.0",
+    "redstone-smartweave": "0.4.53",
+    "sqlite3": "5.0.2",
+    "threads": "^1.7.0",
     "undici": "4.15.1",
-    "redstone-smartweave": "0.4.43",
-    "sqlite3": "5.0.2"
+    "yargs": "^17.3.1"
   },
   "devDependencies": {
     "@types/koa-bodyparser": "^4.3.4",
@@ -34,6 +39,6 @@
     "eslint": "8.3.0",
     "prettier": "2.5.0",
     "ts-node-dev": "1.1.8",
-    "typescript": "4.5.2"
+    "typescript": "4.6.2"
   }
 }

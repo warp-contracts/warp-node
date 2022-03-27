@@ -3,13 +3,23 @@
     "strict": true,
     "outDir": "dist",
     "esModuleInterop": true,
-    "downlevelIteration": true
+    "downlevelIteration": true,
+    "lib": [
+      "dom",
+      "es5",
+      "scripthost",
+      "es2017.sharedmemory",
+      "es2020.promise",
+      "es2015.promise"
+    ]
   },
   "ts-node": {
     "files": true
   },
   "files": [
-    "src/node/init.ts", "src/TsLogFactory.d.ts",
-    "src/validator/init.ts"
-  ]
+    "src/node/init.ts",
+    "src/TsLogFactory.d.ts",
+    "src/validator/init.ts",
+  ],
+  "rootDirs": ["./src"]
 }

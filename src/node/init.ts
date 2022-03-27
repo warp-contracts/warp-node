@@ -4,100 +4,117 @@ import Koa from "koa";
 import bodyParser from "koa-bodyparser";
 import {connect} from "../db/connect";
 import nodeRouter from "./nodeRouter";
-import {LoggerFactory, RedStoneLogger, SmartWeave, SmartWeaveNodeFactory,} from "redstone-smartweave";
+import {LoggerFactory, RedStoneLogger, SmartWeave,} from "redstone-smartweave";
 import {TsLogFactory} from "redstone-smartweave/lib/cjs/logging/node/TsLogFactory";
-import axios from "axios";
 import {initArweave} from "./arweave";
 import Arweave from "arweave";
 import * as os from "os";
+import {JWKInterface} from "arweave/node/lib/wallet";
+import * as fs from "fs";
+import yargs from 'yargs';
+import {hideBin} from 'yargs/helpers'
+import {connectSdk} from "./connectSdk";
+import {NetworkContractService} from "./NetworkContractService";
+import {ExecutionNode, NodeData} from "./ExecutionNode";
+import {MessageChannel, receiveMessageOnPort, Worker} from "worker_threads";
+import {addExitCallback} from "catch-exit";
 
 require("dotenv").config();
 
 declare module "koa" {
-    interface BaseContext {
-        db: Knex;
-        gatewayDb: Knex;
-        sdk: SmartWeave;
-        logger: RedStoneLogger;
-        whoami: NodeData;
-        network: string;
-        arweave: Arweave;
-        port: number;
-    }
+  interface BaseContext {
+    db: Knex;
+    gatewayDb: Knex;
+    sdk: SmartWeave;
+    logger: RedStoneLogger;
+    node: ExecutionNode;
+    network: string;
+    arweave: Arweave;
+    port: number;
+    testnet: boolean
+  }
 }
 
-export type NodeData = {
-    id: string;
-    address: string;
-};
-
-export async function register(
-    nodeId: string,
-    address: string,
-    networkAddress: string
-) {
-    // TODO: retries
-    await axios.post(`${networkAddress}/network/register`, {
-        nodeId,
-        address,
-    });
-}
-
-export async function unregister(nodeId: string, networkAddress: string) {
-    // TODO: retries
-    console.log('unregister', nodeId, networkAddress);
-    await axios.post(`${networkAddress}/network/unregister`, {
-        nodeId,
-    });
-}
+const argv = yargs(hideBin(process.argv)).parseSync();
 
 (async () => {
-    const port = parseInt((process.env.PORT || 4242).toString());
-    const nodeId = `Node_${os.hostname()}_${port}`;
-    const address = `http://localhost:${port}`;
-    const networkAddress = `http://localhost:5666`;
+  const url = argv.url as string;
+  const port = (argv.port || 5777) as number;
+  const address = `${argv.url}:${port}`;
+  const testnet = (argv.testnet || "true") == "true";
+  const networkId = argv.networkId as string;
+  const networkContractId = argv.networkContractId as string;
 
-    LoggerFactory.use(new TsLogFactory());
-    LoggerFactory.INST.setOptions({
-        displayInstanceName: true,
-        instanceName: nodeId,
-        moduleName: false,
-    });
-    LoggerFactory.INST.logLevel("error");
-    LoggerFactory.INST.logLevel("debug", "node");
-    const logger = LoggerFactory.INST.create("node");
+  const dbPath = path.join(__dirname, '.db');
+  const arweave = initArweave(testnet);
+  const wallet = readWallet();
+  const jwkAddress = await arweave.wallets.getAddress(wallet);
+  const nodeId = `${os.hostname()}_${port}_${jwkAddress}`;
 
-    logger.info(`====== Starting ======`);
+  LoggerFactory.use(new TsLogFactory());
+  LoggerFactory.INST.logLevel("error");
+  LoggerFactory.INST.logLevel("debug", "node");
+  LoggerFactory.INST.logLevel("debug", "ExecutionNode");
+  LoggerFactory.INST.logLevel("debug", "NetworkContractService");
+  const logger = LoggerFactory.INST.create("⛄");
 
-    const app = new Koa();
-    const db = connect(port, "state", path.join("db", "peers"));
-    const arweave = initArweave();
+  if (!fs.existsSync(dbPath)) {
+    fs.mkdirSync(dbPath);
+  }
+  const {sdk, contract} = await connectSdk(
+    arweave,
+    dbPath,
+    testnet,
+    networkContractId,
+    wallet);
 
-    app.context.db = db;
-    app.context.arweave = arweave;
-    app.context.sdk = (await SmartWeaveNodeFactory.knexCachedBased(arweave, db))
-        .useRedStoneGateway({notCorrupted: true})
-        .build();
+  const networkContract = new NetworkContractService(contract, sdk, testnet);
+  const nodeData = {
+    nodeId,
+    owner: jwkAddress,
+    url,
+    port,
+    address,
+    networkId,
+    testnet,
+    networkContractId,
+    wallet
+  };
+  const node = new ExecutionNode(nodeData, sdk, networkContract, arweave);
 
-    app.context.logger = logger;
-    app.context.whoami = {id: nodeId, address};
-    app.context.network = networkAddress;
-    app.context.port = port;
+  const app = new Koa();
+  const db = connect(port, "state", path.join("db", "peers"));
 
-    app.use(bodyParser());
-    app.use(nodeRouter.routes());
+  app.context.db = db;
+  app.context.arweave = arweave;
+  app.context.sdk = sdk;
+  app.context.logger = logger;
+  app.context.node = node;
+  app.use(bodyParser());
+  app.use(nodeRouter.routes());
+  app.listen(port);
 
-    app.listen(port);
+  try {
+    await node.registerInNetwork();
+  } catch (e) {
+    logger.error(e);
+    await node.disconnectFromNetwork();
+    await node.registerInNetwork();
+  }
 
-    await register(nodeId, address, networkAddress);
-    process.on("exit", async () => {
-        await unregister(nodeId, networkAddress);
-        process.exit();
-    });
-    process.on("SIGINT", async () => {
-        await unregister(nodeId, networkAddress);
-        process.exit();
-    });
-
-    logger.info(`Listening on port ${port}`);
+  addExitCallback((signal) => {
+    // TODO: this does not work for async calls
+    if (signal !== 'exit') {
+      new Promise((resolve) => {
+        node.disconnectFromNetwork().then(function () {
+          resolve(null);
+        });
+      });
+    }
+  });
 })();
+
+function readWallet(): JWKInterface {
+  const json = fs.readFileSync(path.join(__dirname, '.secrets', 'testnet-wallet.json'), "utf-8");
+  return JSON.parse(json);
+}

@@ -40,9 +40,8 @@ declare module "koa" {
   const port = parseInt((process.env.PORT || 5666).toString());
   const networkId = `Network_${port}`;
 
-  LoggerFactory.use(new TsLogFactory());
-  LoggerFactory.INST.logLevel("info");
-  LoggerFactory.INST.logLevel("debug", "network");
+  LoggerFactory.INST.logLevel("error");
+  LoggerFactory.INST.logLevel("info", "network");
 
   const networkLogger = LoggerFactory.INST.create("network");
   networkLogger.info(`Starting`);
@@ -51,7 +50,7 @@ declare module "koa" {
   const db = connect(port, "network", path.join("db", "network"));
   await init(db);
 
-  const arweave = initArweave();
+  const arweave = initArweave(true);
   app.context.db = db;
   app.context.logger = networkLogger;
   app.context.arweave = arweave;

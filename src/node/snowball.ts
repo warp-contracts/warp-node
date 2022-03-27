@@ -43,7 +43,7 @@ export const snowball = async (
   let preference = hash;
   let lastPreference = preference;
   let consecutiveSuccesses = 0;
-  const votes: { ip: string; hash: string }[] = [];
+  const votes: { nodeId: string; hash: string }[] = [];
 
   while (!decided) {
     // TODO: round-robin? weighted round-robin based on nodes reputation?
