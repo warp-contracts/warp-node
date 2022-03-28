@@ -13,9 +13,10 @@ import * as fs from "fs";
 import yargs from 'yargs';
 import {hideBin} from 'yargs/helpers'
 import {connectSdk} from "./connectSdk";
-import {NetworkContractService} from "./NetworkContractService";
-import {ExecutionNode} from "./ExecutionNode";
+import {NetworkContractService} from "./components/NetworkContractService";
+import {ExecutionNode} from "./components/ExecutionNode";
 import {addExitCallback} from "catch-exit";
+import {Snowball} from "./components/Snowball";
 
 require("dotenv").config();
 
@@ -30,7 +31,8 @@ declare module "koa" {
     network: string;
     arweave: Arweave;
     port: number;
-    testnet: boolean
+    testnet: boolean;
+    snowball: Snowball;
   }
 }
 
@@ -84,6 +86,8 @@ const argv = yargs(hideBin(process.argv)).parseSync();
     wallet
   };
   const node = new ExecutionNode(nodeData, sdk, networkContract, arweave);
+  const consensusParams = await networkContract.consensusParams(node.nodeData);
+  const snowball = new Snowball(consensusParams);
 
   const app = new Koa();
 
@@ -93,6 +97,7 @@ const argv = yargs(hideBin(process.argv)).parseSync();
   app.context.logger = logger;
   app.context.node = node;
   app.context.networkContract = networkContract;
+  app.context.snowball = snowball;
   app.use(bodyParser());
   app.use(nodeRouter.routes());
   app.listen(port);

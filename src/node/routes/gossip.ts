@@ -1,5 +1,5 @@
 import Router from "@koa/router";
-import {NodeData} from "../ExecutionNode";
+import {NodeData} from "../components/ExecutionNode";
 
 export type GossipQueryResult = {
   node: NodeData;

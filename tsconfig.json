@@ -22,7 +22,5 @@
   "files": [
     "src/node/init.ts",
     "src/TsLogFactory.d.ts",
-    "src/validator/init.ts",
-  ],
-  "rootDirs": ["./src"]
+  ]
 }

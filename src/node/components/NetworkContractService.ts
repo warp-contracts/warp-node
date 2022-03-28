@@ -1,5 +1,6 @@
 import {Contract, SmartWeave} from "redstone-smartweave";
 import {NodeData} from "./ExecutionNode";
+import {ConsensusParams} from "./Snowball";
 
 /**
  * A wrapper for SmartWeave "network" contract.
@@ -46,6 +47,18 @@ export class NetworkContractService {
     const networkId = nodeData.networkId;
     const nodes = state.networks[networkId].connectedNodes;
     return Object.keys(nodes).filter((n: string) => n != nodeData.nodeId).map(k => nodes[k]);
+  }
+
+  async consensusParams(nodeData: NodeData): Promise<ConsensusParams> {
+    const {state, validity} = await this.contract.readState();
+    const networkId = nodeData.networkId;
+    const consensusParams = state.networks[networkId].consensusParams;
+
+    return {
+      quorumSize: parseInt(consensusParams.quorumSize),
+      sampleSize: parseInt(consensusParams.sampleSize),
+      decisionThreshold: parseFloat(consensusParams.decisionThreshold)
+    }
   }
 
   private async writeInteraction(input: any): Promise<any> {
