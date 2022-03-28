@@ -61,6 +61,7 @@ const argv = yargs(hideBin(process.argv)).parseSync();
   LoggerFactory.INST.logLevel("debug", "node");
   LoggerFactory.INST.logLevel("debug", "ExecutionNode");
   LoggerFactory.INST.logLevel("debug", "NetworkContractService");
+  LoggerFactory.INST.logLevel("debug", "⛄");
   const logger = LoggerFactory.INST.create("node");
 
   if (!fs.existsSync(dbPath)) {
