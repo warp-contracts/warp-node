@@ -1,9 +1,10 @@
-import axios, { AxiosResponse } from "axios";
 import Router from "@koa/router";
-import { GossipQueryResult } from "./routes/gossip";
+import {GossipQueryResult} from "./routes/gossip";
+import {NodeData} from "./ExecutionNode";
+
 
 const QUORUM_SIZE = 0.6;
-const SAMPLE_SIZE = 4;
+const SAMPLE_SIZE = 2;
 const DECISION_THRESHOLD = 1;
 
 const count = (array: string[]): { [item: string]: number } => {
@@ -17,7 +18,8 @@ export const snowball = async (
   contractId: string,
   height: number,
   hash: string
-) => {
+): Promise<{preference: string, votes: GossipQueryResult[]}> => {
+  // TODO: from network configuration
   ctx.logger.info(`Starting snowball consensus on`, {
     contract: contractId,
     height,
@@ -31,11 +33,9 @@ export const snowball = async (
 
   const internalCounts: { [item: string]: number } = {};
 
-  const activePeers: { id: string; address: string }[] = (
-    await axios.get(`${ctx.network}/network/other-peers?askingNode=${ctx.nodeId}`)
-  ).data;
+  const activePeers: NodeData[] = await ctx.networkContract.getOtherNodes(ctx.node.nodeData);
 
-  ctx.logger.debug("All active peers", activePeers);
+  ctx.logger.debug("Other active peers", activePeers.map(a => `${a.nodeId}: ${a.address}`));
 
   // https://docs.avax.network/learn/platform-overview/avalanche-consensus/#algorithm
   // https://ipfs.io/ipfs/QmUy4jh5mGNZvLkjies1RWM4YuvJh5o2FYopNPVYwrRVGV page 4., Figure 3.
@@ -43,7 +43,7 @@ export const snowball = async (
   let preference = hash;
   let lastPreference = preference;
   let consecutiveSuccesses = 0;
-  const votes: { nodeId: string; hash: string }[] = [];
+  const votes: GossipQueryResult[] = [];
 
   while (!decided) {
     // TODO: round-robin? weighted round-robin based on nodes reputation?
@@ -52,29 +52,32 @@ export const snowball = async (
       .slice(0, SAMPLE_SIZE);
 
     ctx.logger.info(
-      "Querying peers",
-      randomPeers.map((p) => p.address)
+      "Querying nodes",
+      randomPeers.map((p) => p.address).join(', ')
     );
 
-    const peersQuery: Promise<AxiosResponse<GossipQueryResult>>[] =
-      randomPeers.map((peer) => {
-        return axios.post(`${peer.address}/gossip`, {
-          type: "query",
-          contractId,
-          height,
-        });
-      });
+    const peersQuery: Promise<Response>[] =
+      randomPeers.map((peer) => fetch(`${peer.address}/gossip?type=query&contractId=${contractId}&height=${height}`));
 
     const peersQueryResult = await Promise.allSettled(peersQuery);
-    peersQueryResult.forEach((result) => {
-      if (result.status === "fulfilled") {
-        const data = result.value.data;
-        votes.push({ ip: data.peer.address, hash: data.hash });
-        ctx.logger.debug(`Hash returned:`, data);
+    for (const result of peersQueryResult) {
+      if (result.status == "fulfilled") {
+        const res = (result as PromiseFulfilledResult<Response>).value
+        if (res.ok) {
+          const data = await res.json() as unknown as GossipQueryResult;
+          votes.push(data)
+          ctx.logger.debug(`Hash returned:`, {
+            hash: data.hash,
+            nodeId: data.node.nodeId
+          });
+        } else {
+          ctx.logger.error(res.statusText);
+        }
+
       } else {
         ctx.logger.error(result.reason);
       }
-    });
+    }
 
     const votesCounts = count(votes.map((item) => item.hash));
     for (const [peerHash, amount] of Object.entries(votesCounts)) {
@@ -108,6 +111,11 @@ export const snowball = async (
   }
 
   ctx.logger.info(`[snowball] Consensus: ${preference}`);
+
+  return {
+    preference,
+    votes: votes
+  }
 
   // TODO: now we have consensus - but what next?
   // how to mark the state as accepted on all peers?

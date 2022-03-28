@@ -2,16 +2,14 @@ import Router from "@koa/router";
 import {NodeData} from "../ExecutionNode";
 
 export type GossipQueryResult = {
-  peer: NodeData;
+  node: NodeData;
   hash: string;
 };
 
 export const gossipRoute = async (ctx: Router.RouterContext) => {
-  const { type, contractId, height } = ctx.request.body as {
-    type: string;
-    contractId: string;
-    height: number;
-  };
+  const height = parseInt(ctx.query.height as string);
+  const type = ctx.query.type as string;
+  const contractId = ctx.query.contractId as string;
 
   if (type === "query") {
     try {
@@ -32,7 +30,7 @@ export const gossipRoute = async (ctx: Router.RouterContext) => {
           .limit(1)
       )[0];
 
-      ctx.body = { hash: result.hash, peer: ctx.whoami };
+      ctx.body = { hash: result.hash, node: ctx.node.nodeData };
       ctx.status = 200;
     } catch (error: unknown) {
       ctx.body = { peer: ctx.whoami, error };

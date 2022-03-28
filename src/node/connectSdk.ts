@@ -1,6 +1,6 @@
 import Arweave from "arweave";
 import {Contract, SmartWeave, SmartWeaveNodeFactory} from "redstone-smartweave";
-import {knex} from "knex";
+import {Knex, knex} from "knex";
 import {JWKInterface} from "arweave/node/lib/wallet";
 
 export async function connectSdk(
@@ -9,8 +9,8 @@ export async function connectSdk(
   testnet: boolean,
   networkContractId: string,
   jwk: JWKInterface
-): Promise<{ sdk: SmartWeave, contract: Contract<any> }> {
-  const knexConfig = knex({
+): Promise<{ sdk: SmartWeave, contract: Contract<any>, db: Knex}> {
+  const db = knex({
     client: 'sqlite3',
     connection: {
       filename: `${cacheDir}/contracts.sqlite`
@@ -20,13 +20,13 @@ export async function connectSdk(
 
   let sdk: SmartWeave;
   if (testnet) {
-    sdk = await SmartWeaveNodeFactory.knexCached(arweave, knexConfig, 5);
+    sdk = await SmartWeaveNodeFactory.knexCached(arweave, db, 5);
   } else {
-    sdk = (await SmartWeaveNodeFactory.knexCachedBased(arweave, knexConfig))
+    sdk = (await SmartWeaveNodeFactory.knexCachedBased(arweave, db))
       .useRedStoneGateway({confirmed: true})
       .build();
   }
 
   const contract = sdk.contract<any>(networkContractId).connect(jwk);
-  return {sdk, contract};
+  return {sdk, contract, db};
 }

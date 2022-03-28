@@ -6,7 +6,7 @@ import { currentState } from "./routes/currentState";
 const nodeRouter = new Router();
 
 nodeRouter.get("/info", infoRoute);
-nodeRouter.post("/current-state", currentState);
-nodeRouter.post("/gossip", gossipRoute);
+nodeRouter.get("/current-state", currentState);
+nodeRouter.get("/gossip", gossipRoute);
 
 export default nodeRouter;

@@ -4,6 +4,9 @@
     "outDir": "dist",
     "esModuleInterop": true,
     "downlevelIteration": true,
+    "moduleResolution": "node",
+    "target": "es2020",
+    "module": "commonjs",
     "lib": [
       "dom",
       "es5",

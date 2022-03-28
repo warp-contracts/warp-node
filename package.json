@@ -2,9 +2,10 @@
   "scripts": {
     "dev:network:start": "ts-node-dev src/validator/init.ts",
     "dev:network:watch": "ts-node-dev --watch -- src/validator/init.ts",
-    "dev:node:watch": "ts-node-dev --watch -- src/node/init.ts --url='http://localhost' --networkId='ppe_localhost' --networkContractId='VQkLjOCjFkzobvPeixBtTSNC7wx-6SRGQWZaB3lZ0GM'",
+    "dev:node:start": "ts-node-dev -- src/node/init.ts --url='http://localhost' --networkId='ppe_localhost' --networkContractId='LtEAEAyVdQfTamLdCz6zeX9ji0hMZ6iaXttrTexra9A'",
+    "dev:node:watch": "ts-node-dev --watch -- src/node/init.ts --url='http://localhost' --networkId='ppe_localhost' --networkContractId='LtEAEAyVdQfTamLdCz6zeX9ji0hMZ6iaXttrTexra9A'",
     "build": "tsc",
-    "start:node": "node dist/node/init.js --url='http://localhost' --networkId='ppe_localhost' --networkContractId='VQkLjOCjFkzobvPeixBtTSNC7wx-6SRGQWZaB3lZ0GM'",
+    "start:node": "node dist/node/init.js --url='http://localhost' --networkId='ppe_localhost' --networkContractId='LtEAEAyVdQfTamLdCz6zeX9ji0hMZ6iaXttrTexra9A'",
     "start:validator": "node dist/validator/init.js",
     "format": "prettier --write ."
   },
@@ -25,7 +26,7 @@
     "redstone-smartweave": "0.4.53",
     "sqlite3": "5.0.2",
     "threads": "^1.7.0",
-    "undici": "4.15.1",
+    "undici": "4.16.0",
     "yargs": "^17.3.1"
   },
   "devDependencies": {

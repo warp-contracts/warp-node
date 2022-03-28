@@ -2,7 +2,6 @@ import * as path from "path";
 import {Knex} from "knex";
 import Koa from "koa";
 import bodyParser from "koa-bodyparser";
-import {connect} from "../db/connect";
 import nodeRouter from "./nodeRouter";
 import {LoggerFactory, RedStoneLogger, SmartWeave,} from "redstone-smartweave";
 import {TsLogFactory} from "redstone-smartweave/lib/cjs/logging/node/TsLogFactory";
@@ -15,8 +14,7 @@ import yargs from 'yargs';
 import {hideBin} from 'yargs/helpers'
 import {connectSdk} from "./connectSdk";
 import {NetworkContractService} from "./NetworkContractService";
-import {ExecutionNode, NodeData} from "./ExecutionNode";
-import {MessageChannel, receiveMessageOnPort, Worker} from "worker_threads";
+import {ExecutionNode} from "./ExecutionNode";
 import {addExitCallback} from "catch-exit";
 
 require("dotenv").config();
@@ -28,6 +26,7 @@ declare module "koa" {
     sdk: SmartWeave;
     logger: RedStoneLogger;
     node: ExecutionNode;
+    networkContract: NetworkContractService;
     network: string;
     arweave: Arweave;
     port: number;
@@ -52,16 +51,20 @@ const argv = yargs(hideBin(process.argv)).parseSync();
   const nodeId = `${os.hostname()}_${port}_${jwkAddress}`;
 
   LoggerFactory.use(new TsLogFactory());
+  LoggerFactory.INST.setOptions({
+    displayInstanceName: true,
+    instanceName: port,
+  });
   LoggerFactory.INST.logLevel("error");
   LoggerFactory.INST.logLevel("debug", "node");
   LoggerFactory.INST.logLevel("debug", "ExecutionNode");
   LoggerFactory.INST.logLevel("debug", "NetworkContractService");
-  const logger = LoggerFactory.INST.create("⛄");
+  const logger = LoggerFactory.INST.create("node");
 
   if (!fs.existsSync(dbPath)) {
     fs.mkdirSync(dbPath);
   }
-  const {sdk, contract} = await connectSdk(
+  const {sdk, contract, db} = await connectSdk(
     arweave,
     dbPath,
     testnet,
@@ -83,13 +86,13 @@ const argv = yargs(hideBin(process.argv)).parseSync();
   const node = new ExecutionNode(nodeData, sdk, networkContract, arweave);
 
   const app = new Koa();
-  const db = connect(port, "state", path.join("db", "peers"));
 
   app.context.db = db;
   app.context.arweave = arweave;
   app.context.sdk = sdk;
   app.context.logger = logger;
   app.context.node = node;
+  app.context.networkContract = networkContract;
   app.use(bodyParser());
   app.use(nodeRouter.routes());
   app.listen(port);

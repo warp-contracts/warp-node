@@ -22,38 +22,38 @@ export class ExecutionNode {
   lastCalculatedHeight = 0;
 
   constructor(
-    readonly nodeData: NodeData,
+    private readonly _nodeData: NodeData,
     private readonly sdk: SmartWeave,
     private readonly networkService: NetworkContractService,
     private readonly arweave: Arweave,
   ) {
-    this.logger.info('🚀🚀🚀 Starting execution node with params:', {...nodeData, wallet:''});
+    this.logger.info('🚀🚀🚀 Starting execution node with params:', {..._nodeData, wallet:''});
     this.evalContracts = this.evalContracts.bind(this);
   }
 
   async registerInNetwork(): Promise<void> {
-    if (this.nodeData.testnet) {
-      await this.arweave.api.get(`/mint/${this.nodeData.owner}/1000000000000000`);
+    if (this._nodeData.testnet) {
+      await this.arweave.api.get(`/mint/${this._nodeData.owner}/1000000000000000`);
     }
     await this.evalContracts();
     this.logger.info("✅ Initial contracts evaluation done.");
 
-    await this.networkService.connectToNetwork(this.nodeData);
-    this.logger.info('✅ Successfully registered in network', this.nodeData.networkId);
+    await this.networkService.connectToNetwork(this._nodeData);
+    this.logger.info('✅ Successfully registered in network', this._nodeData.networkId);
 
     this.scheduleSyncTask();
   }
 
   async disconnectFromNetwork(): Promise<void> {
     this.logger.debug('Disconnecting from network');
-    await this.networkService.disconnectFromNetwork(this.nodeData);
-    this.logger.info('🔌 Successfully disconnected from network', this.nodeData.networkId);
+    await this.networkService.disconnectFromNetwork(this._nodeData);
+    this.logger.info('🔌 Successfully disconnected from network', this._nodeData.networkId);
   }
 
   async evalContracts(): Promise<void> {
     this.logger.info(`💻 Evaluating contracts state`);
 
-    const contracts = await this.networkService.getContracts(this.nodeData); //TODO: cache
+    const contracts = await this.networkService.getContracts(this._nodeData); //TODO: cache
     const networkInfo = await this.arweave.network.getInfo(); // TODO: cache
     const promises = contracts.map(c => {
       this.sdk.contract(c.arweaveTxId).setEvaluationOptions({
@@ -83,4 +83,11 @@ export class ExecutionNode {
     })();
   }
 
+
+  get nodeData(): NodeData {
+    return {
+      ...this._nodeData,
+      wallet: {} as JWKInterface
+    };
+  }
 }

@@ -43,8 +43,9 @@ export class NetworkContractService {
 
   async getOtherNodes(nodeData: NodeData): Promise<any[]> {
     const {state, validity} = await this.contract.readState();
-    
-
+    const networkId = nodeData.networkId;
+    const nodes = state.networks[networkId].connectedNodes;
+    return Object.keys(nodes).filter((n: string) => n != nodeData.nodeId).map(k => nodes[k]);
   }
 
   private async writeInteraction(input: any): Promise<any> {
