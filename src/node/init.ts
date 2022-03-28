@@ -52,7 +52,9 @@ const argv = yargs(hideBin(process.argv)).parseSync();
   const jwkAddress = await arweave.wallets.getAddress(wallet);
   const nodeId = `${os.hostname()}_${port}_${jwkAddress}`;
 
-  LoggerFactory.use(new TsLogFactory());
+  if (testnet) {
+    LoggerFactory.use(new TsLogFactory());
+  }
   LoggerFactory.INST.setOptions({
     displayInstanceName: true,
     instanceName: port,
@@ -61,7 +63,7 @@ const argv = yargs(hideBin(process.argv)).parseSync();
   LoggerFactory.INST.logLevel("debug", "node");
   LoggerFactory.INST.logLevel("debug", "ExecutionNode");
   LoggerFactory.INST.logLevel("debug", "NetworkContractService");
-  LoggerFactory.INST.logLevel("debug", "⛄");
+  LoggerFactory.INST.logLevel("debug", "Snowball");
   const logger = LoggerFactory.INST.create("node");
 
   if (!fs.existsSync(dbPath)) {
@@ -72,7 +74,8 @@ const argv = yargs(hideBin(process.argv)).parseSync();
     dbPath,
     testnet,
     networkContractId,
-    wallet);
+    wallet,
+    port);
 
   const networkContract = new NetworkContractService(contract, sdk, testnet);
   const nodeData = {

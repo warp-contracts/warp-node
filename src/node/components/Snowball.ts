@@ -12,7 +12,7 @@ export type ConsensusParams = {
 // https://docs.avax.network/learn/platform-overview/avalanche-consensus/#algorithm
 // https://ipfs.io/ipfs/QmUy4jh5mGNZvLkjies1RWM4YuvJh5o2FYopNPVYwrRVGV page 4., Figure 3.
 export class Snowball {
-  private readonly logger = LoggerFactory.INST.create('⛄');
+  private readonly logger = LoggerFactory.INST.create("Snowball");
 
   constructor(private readonly consensusParams: ConsensusParams) {
   }
@@ -112,7 +112,6 @@ export class Snowball {
     }
 
     this.logger.info(`[snowball] Consensus: ${preference}`);
-    this.logger.info("rounds", rounds);
 
     return {
       preference,

@@ -8,12 +8,13 @@ export async function connectSdk(
   cacheDir: string,
   testnet: boolean,
   networkContractId: string,
-  jwk: JWKInterface
+  jwk: JWKInterface,
+  port: number
 ): Promise<{ sdk: SmartWeave, contract: Contract<any>, db: Knex}> {
   const db = knex({
     client: 'sqlite3',
     connection: {
-      filename: `${cacheDir}/contracts.sqlite`
+      filename: `${cacheDir}/contracts-${port}.sqlite`
     },
     useNullAsDefault: true
   });
