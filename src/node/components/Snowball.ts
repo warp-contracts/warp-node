@@ -9,6 +9,8 @@ export type ConsensusParams = {
   decisionThreshold: number;
 }
 
+const MAX_PREFERENCE_CHANGES = 10;
+
 // https://docs.avax.network/learn/platform-overview/avalanche-consensus/#algorithm
 // https://ipfs.io/ipfs/QmUy4jh5mGNZvLkjies1RWM4YuvJh5o2FYopNPVYwrRVGV page 4., Figure 3.
 export class Snowball {
@@ -42,6 +44,8 @@ export class Snowball {
     const votes: GossipQueryResult[] = [];
     const rounds: GossipQueryResult[][] = [];
 
+    let preferenceChanges = 0;
+
     while (!decided) {
       // TODO: round-robin? weighted round-robin based on nodes reputation?
       const randomPeers = activePeers
@@ -53,7 +57,7 @@ export class Snowball {
 
       this.logger.info(
         "Querying nodes",
-        randomPeers.map((p) => p.address).join(', ')
+        randomPeers.map((p) => p.address).join(',\n')
       );
 
       const peersQuery: Promise<Response>[] =
@@ -67,10 +71,6 @@ export class Snowball {
             const data = await res.json() as unknown as GossipQueryResult;
             votes.push(data);
             round.push(data);
-            this.logger.debug(`Hash returned:`, {
-              hash: data.hash,
-              nodeId: data.node.nodeId
-            });
           } else {
             this.logger.error(res.statusText);
           }
@@ -89,18 +89,18 @@ export class Snowball {
             preference = peerHash;
 
             if (preference !== lastPreference) {
-              this.logger.info("[snowball] Preference change", {
+              this.logger.info("Preference change", {
                 from: lastPreference,
                 to: peerHash,
               });
+              if (++preferenceChanges > MAX_PREFERENCE_CHANGES) {
+                throw new Error("Could not get consensus on state");
+              }
+              preferenceChanges++;
               lastPreference = peerHash;
               consecutiveSuccesses = 0;
             } else {
               consecutiveSuccesses++;
-              this.logger.info(
-                "[snowball] consecutive successes",
-                consecutiveSuccesses
-              );
               if (consecutiveSuccesses > this.consensusParams.decisionThreshold) {
                 decided = true;
                 break;

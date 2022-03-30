@@ -31,19 +31,25 @@ export const currentState = async (ctx: Router.RouterContext) => {
     result: hashProposal
   });
 
-  const result = await ctx.snowball.roll(ctx, contractId, hashProposal.height, hashProposal.hash);
-  let response;
-  if (result.preference == hashProposal.hash) {
-    response = {
-      height: hashProposal.height,
-      ...result,
-      state,
-      validity
+  try {
+    const result = await ctx.snowball.roll(ctx, contractId, hashProposal.height, hashProposal.hash);
+    let response;
+    if (result.preference == hashProposal.hash) {
+      response = {
+        height: hashProposal.height,
+        ...result,
+        state,
+        validity
+      }
+    } else {
+      response = result;
     }
-  } else {
-    response = result;
+
+    ctx.body = response;
+    ctx.status = 200;
+  } catch (e: any) {
+    ctx.body = e.message;
+    ctx.status = 500;
   }
 
-  ctx.body = response;
-  ctx.status = 200;
 };
