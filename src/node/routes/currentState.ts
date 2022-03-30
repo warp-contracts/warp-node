@@ -35,6 +35,7 @@ export const currentState = async (ctx: Router.RouterContext) => {
   let response;
   if (result.preference == hashProposal.hash) {
     response = {
+      height: hashProposal.height,
       ...result,
       state,
       validity
