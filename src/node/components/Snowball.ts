@@ -115,7 +115,7 @@ export class Snowball {
       }
     }
 
-    this.logger.info(`[snowball] Consensus: ${preference}`);
+    this.logger.info(`Consensus: ${preference}`);
 
     return {
       preference,
