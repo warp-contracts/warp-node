@@ -20,7 +20,15 @@ export const currentState = async (ctx: Router.RouterContext) => {
   const contract: Contract<any> = ctx.sdk.contract(contractId).setEvaluationOptions({
     manualCacheFlush: true
   });
-  const {state, validity, transactionId} = await contract.readState(height);
+  const {state, validity} = await contract.readState(height);
+  const keys = Object.keys(validity);
+  const length = keys.length;
+  const transactionId = keys[length - 1];
+
+  if (!transactionId) {
+    throw new Error("Cannot determine transaction id");
+  }
+
   const hash = contract.stateHash(state);
 
   ctx.logger.debug("Received", {
