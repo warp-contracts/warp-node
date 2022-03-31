@@ -55,7 +55,7 @@ export class ExecutionNode {
     this.logger.info(`💻 Evaluating contracts state`);
 
     const contracts = await this.networkService.getContracts(this._nodeData); //TODO: cache
-    const calculationHeight = cachedNetworkInfo!!.height!! - 5;
+    const calculationHeight = cachedNetworkInfo!!.height!! - 1;
 
     if (this.lastCalculatedHeight == calculationHeight) {
       this.logger.info(`Cache for ${calculationHeight} already calculated.`);
