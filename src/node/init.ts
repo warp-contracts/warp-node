@@ -3,7 +3,7 @@ import {Knex} from "knex";
 import Koa from "koa";
 import bodyParser from "koa-bodyparser";
 import nodeRouter from "./nodeRouter";
-import {LoggerFactory, RedStoneLogger, SmartWeave,} from "redstone-smartweave";
+import {ArweaveWrapper, LoggerFactory, RedStoneLogger, SmartWeave,} from "redstone-smartweave";
 import {TsLogFactory} from "redstone-smartweave/lib/cjs/logging/node/TsLogFactory";
 import {initArweave} from "./arweave";
 import Arweave from "arweave";
@@ -17,23 +17,24 @@ import {NetworkContractService} from "./components/NetworkContractService";
 import {ExecutionNode} from "./components/ExecutionNode";
 import {addExitCallback} from "catch-exit";
 import {Snowball} from "./components/Snowball";
+import Application from "koa";
+import {runNetworkInfoCacheTask} from "./tasks/networkInfoCache";
 
 require("dotenv").config();
 
-declare module "koa" {
-  interface BaseContext {
-    db: Knex;
-    gatewayDb: Knex;
-    sdk: SmartWeave;
-    logger: RedStoneLogger;
-    node: ExecutionNode;
-    networkContract: NetworkContractService;
-    network: string;
-    arweave: Arweave;
-    port: number;
-    testnet: boolean;
-    snowball: Snowball;
-  }
+export interface NodeContext {
+  db: Knex;
+  gatewayDb: Knex;
+  sdk: SmartWeave;
+  logger: RedStoneLogger;
+  node: ExecutionNode;
+  networkContract: NetworkContractService;
+  network: string;
+  arweave: Arweave;
+  port: number;
+  testnet: boolean;
+  snowball: Snowball;
+  arweaveWrapper: ArweaveWrapper;
 }
 
 const argv = yargs(hideBin(process.argv)).parseSync();
@@ -93,7 +94,7 @@ const argv = yargs(hideBin(process.argv)).parseSync();
   const consensusParams = await networkContract.consensusParams(node.nodeData);
   const snowball = new Snowball(consensusParams);
 
-  const app = new Koa();
+  const app = new Koa<Application.DefaultState, NodeContext>();
 
   app.context.db = db;
   app.context.arweave = arweave;
@@ -102,9 +103,12 @@ const argv = yargs(hideBin(process.argv)).parseSync();
   app.context.node = node;
   app.context.networkContract = networkContract;
   app.context.snowball = snowball;
+  app.context.arweaveWrapper = new ArweaveWrapper(arweave);
   app.use(bodyParser());
   app.use(nodeRouter.routes());
   app.listen(port);
+
+  await runNetworkInfoCacheTask(app.context);
 
   try {
     await node.registerInNetwork();

@@ -1,5 +1,7 @@
 import Router from "@koa/router";
 import {NetworkContractService} from "../components/NetworkContractService";
+import {cachedNetworkInfo} from "../tasks/networkInfoCache";
+import {Contract} from "redstone-smartweave";
 
 export const currentState = async (ctx: Router.RouterContext) => {
   const contractId = ctx.query.id as string;
@@ -13,30 +15,26 @@ export const currentState = async (ctx: Router.RouterContext) => {
   }
 
   // evaluate contract
-  const {state, validity} = await ctx.sdk.contract(contractId).readState();
+  const height = cachedNetworkInfo!!.height;
 
-  // load evaluated hash from db
-  // TODO: return directly from SDK to speed up?
-  const hashProposal = (
-    await ctx.db
-      .select("height", "state", "hash")
-      .from("states")
-      .where("contract_id", contractId)
-      .orderBy("height", "desc")
-      .limit(1)
-  )[0];
+  const contract: Contract<any> = ctx.sdk.contract(contractId).setEvaluationOptions({
+    manualCacheFlush: true
+  });
+  const {state, validity, transactionId} = await contract.readState(height);
+  const hash = contract.stateHash(state);
 
   ctx.logger.debug("Received", {
     id: contractId,
-    result: hashProposal
+    transactionId: transactionId,
+    result: hash
   });
 
   try {
-    const result = await ctx.snowball.roll(ctx, contractId, hashProposal.height, hashProposal.hash);
+    const result = await ctx.snowball.roll(ctx, contractId, height, hash, transactionId);
     let response;
-    if (result.preference == hashProposal.hash) {
+    if (result.preference == hash) {
       response = {
-        height: hashProposal.height,
+        height: height,
         ...result,
         state,
         validity

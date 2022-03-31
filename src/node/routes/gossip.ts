@@ -1,5 +1,6 @@
 import Router from "@koa/router";
 import {NodeData} from "../components/ExecutionNode";
+import {Contract} from "redstone-smartweave";
 
 export type GossipQueryResult = {
   node: NodeData;
@@ -10,6 +11,7 @@ export const gossipRoute = async (ctx: Router.RouterContext) => {
   const height = parseInt(ctx.query.height as string);
   const type = ctx.query.type as string;
   const contractId = ctx.query.contractId as string;
+  const upToTransactionId = ctx.query.upToTransactionId as string;
 
   if (type === "query") {
     try {
@@ -17,23 +19,15 @@ export const gossipRoute = async (ctx: Router.RouterContext) => {
         contractId,
         height,
       });
-      // evaluate contract
-      await ctx.sdk.contract(contractId).readState(height);
-
-      // load evaluated hash from node's db
-      const result = (
-        await ctx.db
-          .select("hash")
-          .from("states")
-          .where("contract_id", contractId)
-          .andWhere("height", height)
-          .limit(1)
-      )[0];
-
-      ctx.body = { hash: result.hash, node: ctx.node.nodeData };
+      const contract: Contract<any> = ctx.sdk.contract(contractId).setEvaluationOptions({
+        manualCacheFlush: true
+      });
+      const {state} = await contract.readStateSequencer(height, upToTransactionId);
+      const hash = contract.stateHash(state);
+      ctx.body = {hash: hash, node: ctx.node.nodeData};
       ctx.status = 200;
     } catch (error: unknown) {
-      ctx.body = { peer: ctx.whoami, error };
+      ctx.body = {peer: ctx.whoami, error};
       ctx.status = 500;
     }
   }

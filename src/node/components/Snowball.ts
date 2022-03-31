@@ -23,16 +23,20 @@ export class Snowball {
     ctx: Router.RouterContext,
     contractId: string,
     height: number,
-    hash: string): Promise<{ preference: string, rounds: GossipQueryResult[][] }> {
+    hash: string,
+    upToTransactionId: string): Promise<{ preference: string, rounds: GossipQueryResult[][] }> {
 
     this.logger.info(`Starting snowball consensus on`, {
       contract: contractId,
       height,
       hash,
+      upToTransactionId,
       params: this.consensusParams,
     });
 
     const internalCounts: { [item: string]: number } = {};
+
+    // TODO: add caching
     const activePeers: NodeData[] = await ctx.networkContract.getOtherNodes(ctx.node.nodeData);
 
     this.logger.debug("Other active peers", activePeers.map(a => `${a.nodeId}: ${a.address}`));
@@ -61,7 +65,7 @@ export class Snowball {
       );
 
       const peersQuery: Promise<Response>[] =
-        randomPeers.map((peer) => fetch(`${peer.address}/gossip?type=query&contractId=${contractId}&height=${height}`));
+        randomPeers.map((peer) => fetch(`${peer.address}/gossip?type=query&contractId=${contractId}&height=${height}&upToTransactionId=${upToTransactionId}`));
 
       const peersQueryResult = await Promise.allSettled(peersQuery);
       for (const result of peersQueryResult) {

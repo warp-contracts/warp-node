@@ -2484,10 +2484,10 @@ redstone-isomorphic@^1.1.0:
     safe-buffer "^5.1.2"
     undici "^4.12.2"
 
-redstone-smartweave@0.4.53:
-  version "0.4.53"
-  resolved "https://registry.yarnpkg.com/redstone-smartweave/-/redstone-smartweave-0.4.53.tgz#760ce97756deef7e47e209c458b167f67094591b"
-  integrity sha512-2267urw7T1BkKvonu/coA8QwdmugtZTBDeu/1IdqJCliD+zIXWYDj/62J7RHd8qCYtd+BPar6i8Pw3Ff06QRmg==
+redstone-smartweave@0.4.54:
+  version "0.4.54"
+  resolved "https://registry.yarnpkg.com/redstone-smartweave/-/redstone-smartweave-0.4.54.tgz#ad2907fa92b115b7819dc76cb96b7fa0d67b553d"
+  integrity sha512-CuDv6Wn5LmunRHwF8RRiDLzn2ZXtOWJ3MKos6vogkZUD23F64Xe8HvS+7p6xMPkoI51I/DbPC5CRpWQyEP1QDA==
   dependencies:
     "@assemblyscript/loader" "^0.19.23"
     archiver "^5.3.0"
