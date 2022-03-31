@@ -2,6 +2,7 @@ import {JWKInterface} from "arweave/node/lib/wallet";
 import {LoggerFactory, SmartWeave} from "redstone-smartweave";
 import {NetworkContractService} from "./NetworkContractService";
 import Arweave from "arweave";
+import {cachedNetworkInfo} from "../tasks/networkInfoCache";
 
 export type NodeData = {
   nodeId: string,
@@ -54,13 +55,18 @@ export class ExecutionNode {
     this.logger.info(`💻 Evaluating contracts state`);
 
     const contracts = await this.networkService.getContracts(this._nodeData); //TODO: cache
-    const networkInfo = await this.arweave.network.getInfo(); // TODO: cache
+    const calculationHeight = cachedNetworkInfo!!.height!! - 5;
+
+    if (this.lastCalculatedHeight == calculationHeight) {
+      this.logger.info(`Cache for ${calculationHeight} already calculated.`);
+    }
+
     const promises = contracts.map(c => {
       this.sdk.contract(c.arweaveTxId).setEvaluationOptions({
         useFastCopy: true,
         useVM2: true,
         manualCacheFlush: true
-      }).readState(networkInfo.height);
+      }).readState(calculationHeight);
     });
 
     await Promise.allSettled(promises);
@@ -68,7 +74,7 @@ export class ExecutionNode {
     this.logger.info(`📓 Storing contracts state`);
     await this.sdk.flushCache();
 
-    this.lastCalculatedHeight = networkInfo.height;
+    this.lastCalculatedHeight = calculationHeight!!;
   }
 
   scheduleSyncTask(): void {
