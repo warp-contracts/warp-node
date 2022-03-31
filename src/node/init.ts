@@ -61,6 +61,7 @@ const argv = yargs(hideBin(process.argv)).parseSync();
     instanceName: port,
   });
   LoggerFactory.INST.logLevel("error");
+  LoggerFactory.INST.logLevel("fatal", "WASM:AS");
   LoggerFactory.INST.logLevel("debug", "node");
   LoggerFactory.INST.logLevel("debug", "ExecutionNode");
   LoggerFactory.INST.logLevel("debug", "NetworkContractService");
@@ -114,8 +115,8 @@ const argv = yargs(hideBin(process.argv)).parseSync();
     await node.registerInNetwork();
   } catch (e) {
     logger.error(e);
-    await node.disconnectFromNetwork();
-    await node.registerInNetwork();
+    /*await node.disconnectFromNetwork();
+    await node.registerInNetwork();*/
   }
 
   addExitCallback((signal) => {
