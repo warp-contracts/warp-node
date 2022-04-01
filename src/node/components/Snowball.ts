@@ -38,6 +38,9 @@ export class Snowball {
 
     // TODO: add caching
     const activePeers: NodeData[] = await ctx.networkContract.getOtherNodes(ctx.node.nodeData);
+    if (activePeers.length < this.consensusParams.sampleSize) {
+      throw new Error(`Not enough active peers. Active ${activePeers.length}, sampleSize: ${this.consensusParams.sampleSize}`);
+    }
 
     this.logger.debug("Other active peers", activePeers.map(a => `${a.nodeId}: ${a.address}`));
 

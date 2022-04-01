@@ -37,20 +37,20 @@ export class NetworkContractService {
   }
 
   async getContracts(nodeData: NodeData): Promise<any[]> {
-    const {state, validity} = await this.contract.readState();
+    const {state, validity} = await this.readState();
     const contracts = state.networks[nodeData.networkId].contracts;
     return contracts;
   }
 
   async getOtherNodes(nodeData: NodeData): Promise<any[]> {
-    const {state, validity} = await this.contract.readState();
+    const {state, validity} = await this.readState();
     const networkId = nodeData.networkId;
     const nodes = state.networks[networkId].connectedNodes;
     return Object.keys(nodes).filter((n: string) => n != nodeData.nodeId).map(k => nodes[k]);
   }
 
   async consensusParams(nodeData: NodeData): Promise<ConsensusParams> {
-    const {state, validity} = await this.contract.readState();
+    const {state, validity} = await this.readState();
     const networkId = nodeData.networkId;
     const consensusParams = state.networks[networkId].consensusParams;
 
@@ -59,6 +59,16 @@ export class NetworkContractService {
       sampleSize: parseInt(consensusParams.sampleSize),
       decisionThreshold: parseFloat(consensusParams.decisionThreshold)
     }
+  }
+
+  async readState(): Promise<{state: any, validity: any}> {
+    return await this.contract
+      .setEvaluationOptions({
+        useFastCopy: true,
+        useVM2: true,
+        manualCacheFlush: true
+      })
+      .readState();
   }
 
   private async writeInteraction(input: any): Promise<any> {
