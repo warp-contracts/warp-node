@@ -18,6 +18,7 @@ export type NodeData = {
 
 export class ExecutionNode {
   private readonly logger = LoggerFactory.INST.create('ExecutionNode');
+  private evaluating = false;
   /*private readonly pool = Pool(() => spawn(new Worker("./workers/contractWorker")),
     os.cpus().length * 2); // TODO*/
   lastCalculatedHeight = 0;
@@ -88,7 +89,16 @@ export class ExecutionNode {
 
     (function workerLoop() {
       setTimeout(async () => {
-        await evalContracts();
+        if (this.evaluating) {
+          this.logger.info("Still evaluating previous round...");
+          return;
+        }
+        this.evaluating = true;
+        try {
+          await evalContracts();
+        } finally {
+          this.evaluating = false;
+        }
         workerLoop();
       }, 10000);
     })();
