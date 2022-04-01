@@ -9,7 +9,7 @@ export type ConsensusParams = {
   decisionThreshold: number;
 }
 
-const MAX_PREFERENCE_CHANGES = 10;
+const MAX_PREFERENCE_CHANGES = 5;
 
 // https://docs.avax.network/learn/platform-overview/avalanche-consensus/#algorithm
 // https://ipfs.io/ipfs/QmUy4jh5mGNZvLkjies1RWM4YuvJh5o2FYopNPVYwrRVGV page 4., Figure 3.
@@ -85,6 +85,11 @@ export class Snowball {
         } else {
           this.logger.error(result.reason);
         }
+      }
+
+      if (round.length < this.consensusParams.sampleSize) {
+        this.logger.warn("Not enough successful response from peers, moving to next round");
+        continue;
       }
 
       const votesCounts = this.count(votes.map((item) => item.hash));

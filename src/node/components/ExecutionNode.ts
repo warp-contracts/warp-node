@@ -56,7 +56,7 @@ export class ExecutionNode {
 
     const contracts = await this.networkService.getContracts(this._nodeData); //TODO: cache
     const arweaveHeight = cachedNetworkInfo!!.height!!;
-    const calculationHeight = arweaveHeight - 5;
+    const calculationHeight = arweaveHeight - 2;
 
     if (this.lastCalculatedHeight == calculationHeight) {
       this.logger.info(`Cache for ${calculationHeight} already calculated.`);
