@@ -87,17 +87,19 @@ export class ExecutionNode {
     this.logger.info(`🔄 Starting state sync task.`);
     const evalContracts = this.evalContracts;
 
+    const node = this;
+
     (function workerLoop() {
       setTimeout(async () => {
-        if (this.evaluating) {
-          this.logger.info("Still evaluating previous round...");
+        if (node.evaluating) {
+          node.logger.info("Still evaluating previous round...");
           return;
         }
-        this.evaluating = true;
+        node.evaluating = true;
         try {
           await evalContracts();
         } finally {
-          this.evaluating = false;
+          node.evaluating = false;
         }
         workerLoop();
       }, 10000);
