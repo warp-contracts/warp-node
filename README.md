@@ -29,13 +29,28 @@ Restart all nodes
 Check logs
 `pm2 logs`
 
-### Querying for state
-
+### Endpoints
+1. ehlo
 ```
-POST http://localhost:3000/current-state
-Content-Type: application/json
+http://localhost:3001/ehlo
+http://localhost:3002/ehlo
+http://localhost:3003/ehlo
+http://localhost:3004/ehlo
+http://localhost:3005/ehlo
+http://localhost:3006/ehlo
+http://localhost:3007/ehlo
+http://localhost:3008/ehlo
+```
 
-{
-  "contractId": "B_FIQ0w_R-IHDZGx2j7X9C2IZEJl-SVJN3AKAnhwLk4"
-}
+2. current-state
+```
+http://localhost:3001/current-state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY
+http://localhost:3002/current-state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY
+http://localhost:3003/current-state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY
+http://localhost:3004/current-state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY
+http://localhost:3005/current-state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY
+http://localhost:3006/current-state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY
+http://localhost:3007/current-state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY
+http://localhost:3008/current-state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY
+
 ```
