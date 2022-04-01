@@ -83,7 +83,7 @@ export class ExecutionNode {
 
     (function workerLoop() {
       setTimeout(async () => {
-        await evalContracts();
+        //await evalContracts();
         workerLoop();
       }, 30000);
     })();
