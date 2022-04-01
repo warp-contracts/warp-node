@@ -65,7 +65,7 @@ export class ExecutionNode {
     this.logger.info("Evaluating contracts", {
       currentHeight: arweaveHeight,
       calculationHeight
-    })
+    });
     const promises = contracts.map(c => {
       this.sdk.contract(c.arweaveTxId).setEvaluationOptions({
         useFastCopy: true,
