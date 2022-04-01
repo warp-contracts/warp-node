@@ -18,6 +18,8 @@ export const currentState = async (ctx: Router.RouterContext) => {
   const height = cachedNetworkInfo!!.height;
 
   const contract: Contract<any> = ctx.sdk.contract(contractId).setEvaluationOptions({
+    useFastCopy: true,
+    useVM2: true,
     manualCacheFlush: true
   });
   const {state, validity} = await contract.readState(height);

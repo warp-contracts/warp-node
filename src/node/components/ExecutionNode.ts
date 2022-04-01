@@ -55,12 +55,17 @@ export class ExecutionNode {
     this.logger.info(`💻 Evaluating contracts state`);
 
     const contracts = await this.networkService.getContracts(this._nodeData); //TODO: cache
-    const calculationHeight = cachedNetworkInfo!!.height!!;
+    const arweaveHeight = cachedNetworkInfo!!.height!!;
+    const calculationHeight = arweaveHeight - 5;
 
     if (this.lastCalculatedHeight == calculationHeight) {
       this.logger.info(`Cache for ${calculationHeight} already calculated.`);
     }
 
+    this.logger.info("Evaluating contracts", {
+      currentHeight: arweaveHeight,
+      calculationHeight
+    })
     const promises = contracts.map(c => {
       this.sdk.contract(c.arweaveTxId).setEvaluationOptions({
         useFastCopy: true,
@@ -83,9 +88,9 @@ export class ExecutionNode {
 
     (function workerLoop() {
       setTimeout(async () => {
-        //await evalContracts();
+        await evalContracts();
         workerLoop();
-      }, 30000);
+      }, 10000);
     })();
   }
 

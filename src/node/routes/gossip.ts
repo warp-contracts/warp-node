@@ -20,6 +20,8 @@ export const gossipRoute = async (ctx: Router.RouterContext) => {
         height,
       });
       const contract: Contract<any> = ctx.sdk.contract(contractId).setEvaluationOptions({
+        useFastCopy: true,
+        useVM2: true,
         manualCacheFlush: true
       });
       const {state} = await contract.readStateSequencer(height, upToTransactionId);
