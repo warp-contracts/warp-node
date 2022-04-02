@@ -5,7 +5,8 @@ import {Contract} from "redstone-smartweave";
 
 export const state = async (ctx: Router.RouterContext) => {
   const contractId = ctx.query.id as string;
-  const showValidity = ctx.query.showValidity === 'true';
+  const showValidity = ctx.query.validity === 'true';
+  const snowball = ctx.query.snowball !== 'false';
 
   const networkContract: NetworkContractService = ctx.networkContract;
   const contracts: any[] = await networkContract.getContracts(ctx.node.nodeData);
@@ -41,14 +42,32 @@ export const state = async (ctx: Router.RouterContext) => {
   });
 
   try {
-    const result = await ctx.snowball.roll(ctx, contractId, height, hash, transactionId);
     let response;
-    if (result.preference == hash) {
+
+    if (snowball) {
+      const result = await ctx.snowball.roll(ctx, contractId, height, hash, transactionId);
+      if (result.preference == hash) {
+        response = {
+          evaluatedInteractions: Object.keys(validity).length,
+          lastTransactionId: transactionId,
+          height: height,
+          ...result,
+          state
+        }
+        if (showValidity) {
+          response = {
+            ...response,
+            validity
+          }
+        }
+      } else {
+        response = result;
+      }
+    } else {
       response = {
         evaluatedInteractions: Object.keys(validity).length,
         lastTransactionId: transactionId,
         height: height,
-        ...result,
         state
       }
       if (showValidity) {
@@ -57,9 +76,8 @@ export const state = async (ctx: Router.RouterContext) => {
           validity
         }
       }
-    } else {
-      response = result;
     }
+
 
     ctx.body = response;
     ctx.status = 200;

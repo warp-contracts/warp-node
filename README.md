@@ -32,29 +32,20 @@ Check logs
 ### Endpoints
 1. ehlo
 ```
-http://localhost:3001/ehlo
-http://localhost:3002/ehlo
-http://localhost:3003/ehlo
-http://localhost:3004/ehlo
-http://localhost:3005/ehlo
-http://localhost:3006/ehlo
-http://localhost:3007/ehlo
-http://localhost:3008/ehlo
+http://localhost:[3001-3008]/ehlo
 ```
 
 2. state
 ```
-http://localhost:3001/state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY
-http://localhost:3002/state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY
-http://localhost:3003/state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY
-http://localhost:3004/state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY
-http://localhost:3005/state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY
-http://localhost:3006/state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY
-http://localhost:3007/state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY
-http://localhost:3008/state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY
+http://localhost:[3001-3008]/state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY
 ```
 
 3. state with validity:
 ```
-http://localhost:3001/state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY&showValidity=true
+http://localhost:3001/state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY&validity=true
+```
+
+4. no snowball
+```
+http://localhost:3001/state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY&snowball=false
 ```
