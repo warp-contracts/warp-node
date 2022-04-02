@@ -46,6 +46,7 @@ export const state = async (ctx: Router.RouterContext) => {
     if (result.preference == hash) {
       response = {
         evaluatedInteractions: Object.keys(validity).length,
+        lastTransactionId: transactionId,
         height: height,
         ...result,
         state
