@@ -119,16 +119,15 @@ const argv = yargs(hideBin(process.argv)).parseSync();
     await node.registerInNetwork();*/
   }
 
-  addExitCallback((signal) => {
-    // TODO: this does not work for async calls
-    if (signal !== 'exit') {
-      new Promise((resolve) => {
-        node.disconnectFromNetwork().then(function () {
-          resolve(null);
-        });
-      });
-    }
+  process.on('SIGINT', function() {
+    logger.info("Disconnecting from network");
+
+    node.disconnectFromNetwork().then(function () {
+      logger.info("Disconnected from network");
+      process.exit(0);
+    });
   });
+
 })();
 
 function readWallet(): JWKInterface {

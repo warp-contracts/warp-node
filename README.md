@@ -42,15 +42,19 @@ http://localhost:3007/ehlo
 http://localhost:3008/ehlo
 ```
 
-2. current-state
+2. state
 ```
-http://localhost:3001/current-state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY
-http://localhost:3002/current-state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY
-http://localhost:3003/current-state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY
-http://localhost:3004/current-state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY
-http://localhost:3005/current-state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY
-http://localhost:3006/current-state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY
-http://localhost:3007/current-state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY
-http://localhost:3008/current-state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY
+http://localhost:3001/state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY
+http://localhost:3002/state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY
+http://localhost:3003/state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY
+http://localhost:3004/state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY
+http://localhost:3005/state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY
+http://localhost:3006/state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY
+http://localhost:3007/state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY
+http://localhost:3008/state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY
+```
 
+3. state with validity:
+```
+http://localhost:3001/state?id=KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY&showValidity=true
 ```

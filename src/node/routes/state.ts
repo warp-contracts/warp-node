@@ -3,8 +3,9 @@ import {NetworkContractService} from "../components/NetworkContractService";
 import {cachedNetworkInfo} from "../tasks/networkInfoCache";
 import {Contract} from "redstone-smartweave";
 
-export const currentState = async (ctx: Router.RouterContext) => {
+export const state = async (ctx: Router.RouterContext) => {
   const contractId = ctx.query.id as string;
+  const showValidity = ctx.query.showValidity === 'true';
 
   const networkContract: NetworkContractService = ctx.networkContract;
   const contracts: any[] = await networkContract.getContracts(ctx.node.nodeData);
@@ -44,10 +45,16 @@ export const currentState = async (ctx: Router.RouterContext) => {
     let response;
     if (result.preference == hash) {
       response = {
+        evaluatedInteractions: Object.keys(validity).length,
         height: height,
         ...result,
-        state,
-        validity
+        state
+      }
+      if (showValidity) {
+        response = {
+          ...response,
+          validity
+        }
       }
     } else {
       response = result;
