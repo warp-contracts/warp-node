@@ -1,6 +1,7 @@
 import * as path from "path";
 import {Knex} from "knex";
 import Koa from "koa";
+import Application from "koa";
 import bodyParser from "koa-bodyparser";
 import nodeRouter from "./nodeRouter";
 import {ArweaveWrapper, LoggerFactory, RedStoneLogger, SmartWeave,} from "redstone-smartweave";
@@ -15,9 +16,7 @@ import {hideBin} from 'yargs/helpers'
 import {connectSdk} from "./connectSdk";
 import {NetworkContractService} from "./components/NetworkContractService";
 import {ExecutionNode} from "./components/ExecutionNode";
-import {addExitCallback} from "catch-exit";
 import {Snowball} from "./components/Snowball";
-import Application from "koa";
 import {runNetworkInfoCacheTask} from "./tasks/networkInfoCache";
 
 require("dotenv").config();
@@ -118,16 +117,6 @@ const argv = yargs(hideBin(process.argv)).parseSync();
     /*await node.disconnectFromNetwork();
     await node.registerInNetwork();*/
   }
-
-  process.on('SIGINT', function() {
-    logger.info("Disconnecting from network");
-
-    node.disconnectFromNetwork().then(function () {
-      logger.info("Disconnected from network");
-      process.exit(0);
-    });
-  });
-
 })();
 
 function readWallet(): JWKInterface {

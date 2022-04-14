@@ -3,6 +3,8 @@ import {LoggerFactory, SmartWeave} from "redstone-smartweave";
 import {NetworkContractService} from "./NetworkContractService";
 import Arweave from "arweave";
 import {cachedNetworkInfo} from "../tasks/networkInfoCache";
+import {Pool, spawn} from "threads";
+import * as os from "os";
 
 export type NodeData = {
   nodeId: string,
@@ -19,8 +21,8 @@ export type NodeData = {
 export class ExecutionNode {
   private readonly logger = LoggerFactory.INST.create('ExecutionNode');
   private evaluating = false;
-  /*private readonly pool = Pool(() => spawn(new Worker("./workers/contractWorker")),
-    os.cpus().length * 2); // TODO*/
+  private readonly pool = Pool(() => spawn(new Worker("./workers/contractWorker")),
+    os.cpus().length * 2); // TODO
   lastCalculatedHeight = 0;
 
   constructor(
