@@ -5,7 +5,7 @@
     "dev:node:start": "ts-node-dev -- src/node/init.ts --url='http://localhost' --networkId='ppe_localhost' --networkContractId='LtEAEAyVdQfTamLdCz6zeX9ji0hMZ6iaXttrTexra9A'",
     "dev:node:watch": "ts-node-dev --watch -- src/node/init.ts --url='http://localhost' --networkId='ppe_localhost' --networkContractId='LtEAEAyVdQfTamLdCz6zeX9ji0hMZ6iaXttrTexra9A'",
     "build": "tsc",
-    "start:node": "node dist/init.js --url='http://localhost' --networkId='ppe_localhost' --networkContractId='LtEAEAyVdQfTamLdCz6zeX9ji0hMZ6iaXttrTexra9A'",
+    "start:node": "node dist/init.js --port=8080 --testnet='false' --url='http://134.209.84.136' --networkId='redstone_network' --networkContractId='_dK3pzMY4b4VEG43suCw10mOwTTq8BrDlaszbQd5iHE'",
     "format": "prettier --write ."
   },
   "license": "MIT",
