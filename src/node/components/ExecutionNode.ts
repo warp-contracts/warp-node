@@ -75,10 +75,13 @@ export class ExecutionNode {
       }).readState(calculationHeight);
     });
 
-    await Promise.allSettled(promises);
-
-    this.logger.info(`📓 Storing contracts state`);
-    await this.sdk.flushCache();
+    try {
+      await Promise.allSettled(promises);
+      this.logger.info(`📓 Storing contracts state`);
+      await this.sdk.flushCache();
+    } catch (e: any) {
+      this.logger.error(e);
+    }
 
     this.lastCalculatedHeight = calculationHeight!!;
   }

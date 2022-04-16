@@ -39,6 +39,14 @@ export interface NodeContext {
 const argv = yargs(hideBin(process.argv)).parseSync();
 
 (async () => {
+  process
+      .on('unhandledRejection', (reason, p) => {
+        console.error(reason, 'Unhandled Rejection at Promise', p);
+      })
+      .on('uncaughtException', err => {
+        console.error(err, 'Uncaught Exception thrown');
+      });
+
   const url = argv.url as string;
   const port = (argv.port || 5777) as number;
   const address = `${argv.url}:${port}`;
