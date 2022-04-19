@@ -18,6 +18,7 @@ import {NetworkContractService} from "./components/NetworkContractService";
 import {ExecutionNode} from "./components/ExecutionNode";
 import {Snowball} from "./components/Snowball";
 import {runNetworkInfoCacheTask} from "./tasks/networkInfoCache";
+import {runOtherPeersTask} from "./tasks/otherPeersCache";
 
 require("dotenv").config();
 
@@ -117,6 +118,7 @@ const argv = yargs(hideBin(process.argv)).parseSync();
   app.listen(port);
 
   await runNetworkInfoCacheTask(app.context);
+  await runOtherPeersTask(app.context);
 
   try {
     await node.registerInNetwork();
@@ -128,6 +130,6 @@ const argv = yargs(hideBin(process.argv)).parseSync();
 })();
 
 function readWallet(): JWKInterface {
-  const json = fs.readFileSync(path.join(__dirname, '.secrets', 'testnet-wallet.json'), "utf-8");
+  const json = fs.readFileSync(path.join(__dirname, '.secrets', 'wallet.json'), "utf-8");
   return JSON.parse(json);
 }

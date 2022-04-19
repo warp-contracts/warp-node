@@ -2,6 +2,7 @@ import Router from "@koa/router";
 import {GossipQueryResult} from "../routes/gossip";
 import {LoggerFactory} from "redstone-smartweave";
 import {NodeData} from "./ExecutionNode";
+import {cachedOtherPeers} from "../tasks/otherPeersCache";
 
 export type ConsensusParams = {
   quorumSize: number;
@@ -36,8 +37,10 @@ export class Snowball {
 
     const internalCounts: { [item: string]: number } = {};
 
-    // TODO: add caching
-    const activePeers: NodeData[] = await ctx.networkContract.getOtherNodes(ctx.node.nodeData);
+    const activePeers: NodeData[] | null = cachedOtherPeers;
+    if (activePeers == null) {
+      throw new Error("Cannot determine active peers.");
+    }
     if (activePeers.length < this.consensusParams.sampleSize) {
       throw new Error(`Not enough active peers. Active ${activePeers.length}, sampleSize: ${this.consensusParams.sampleSize}`);
     }

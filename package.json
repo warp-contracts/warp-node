@@ -1,11 +1,7 @@
 {
   "scripts": {
-    "dev:network:start": "ts-node-dev src/validator/init.ts",
-    "dev:network:watch": "ts-node-dev --watch -- src/validator/init.ts",
-    "dev:node:start": "ts-node-dev -- src/node/init.ts --url='http://localhost' --networkId='ppe_localhost' --networkContractId='LtEAEAyVdQfTamLdCz6zeX9ji0hMZ6iaXttrTexra9A'",
-    "dev:node:watch": "ts-node-dev --watch -- src/node/init.ts --url='http://localhost' --networkId='ppe_localhost' --networkContractId='LtEAEAyVdQfTamLdCz6zeX9ji0hMZ6iaXttrTexra9A'",
     "build": "tsc",
-    "start:node": "node dist/init.js --port=8080 --testnet='false' --url='http://134.209.84.136' --networkId='redstone_network' --networkContractId='_dK3pzMY4b4VEG43suCw10mOwTTq8BrDlaszbQd5iHE'",
+    "start": "node dist/init.js --port=8080 --testnet='false' --url='http://localhost' --networkId='redstone_network' --networkContractId='_dK3pzMY4b4VEG43suCw10mOwTTq8BrDlaszbQd5iHE'",
     "format": "prettier --write ."
   },
   "license": "MIT",
@@ -22,7 +18,7 @@
     "koa": "2.13.4",
     "koa-bodyparser": "4.3.0",
     "koa-compress": "^5.1.0",
-    "redstone-smartweave": "0.4.71",
+    "redstone-smartweave": "0.4.74",
     "sqlite3": "5.0.2",
     "threads": "^1.7.0",
     "undici": "4.16.0",

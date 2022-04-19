@@ -16,7 +16,7 @@ RUN yarn build
 
 RUN mkdir ./dist/.db
 RUN mkdir ./dist/.secrets
-COPY ./.secrets/testnet-wallet.json ./dist/.secrets
+COPY .secrets/wallet.json ./dist/.secrets
 
 # Running redstone node
 ENTRYPOINT ["node", "dist/init.js", "--port=8080", "--testnet='false'", "--networkId='redstone_network'", "--networkContractId='_dK3pzMY4b4VEG43suCw10mOwTTq8BrDlaszbQd5iHE'"]
