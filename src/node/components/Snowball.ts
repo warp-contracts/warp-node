@@ -37,8 +37,8 @@ export class Snowball {
 
     const internalCounts: { [item: string]: number } = {};
 
-    const activePeers: NodeData[] | null = cachedOtherPeers;
-    if (activePeers == null) {
+    const activePeers: NodeData[] | undefined = cachedOtherPeers?.filter(p => !p.blacklisted);
+    if (!activePeers) {
       throw new Error("Cannot determine active peers.");
     }
     if (activePeers.length < this.consensusParams.sampleSize) {

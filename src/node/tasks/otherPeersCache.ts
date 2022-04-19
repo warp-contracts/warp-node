@@ -12,7 +12,18 @@ export async function runOtherPeersTask(context: NodeContext) {
   async function updateOtherPeers() {
     try {
       cachedOtherPeers = await context.networkContract.getOtherNodes(context.node.nodeData);
-      logger.debug("Cached other peers", cachedOtherPeers);
+      const verificationPromises = cachedOtherPeers.map(p => fetchWithTimeout(
+        `${p.address}/ehlo`, {timeout: 3000}
+      ));
+      const verificationResults = await Promise.allSettled(verificationPromises);
+      for (let i = 0; i < verificationResults.length; i++) {
+        const verificationResult = verificationResults[i];
+        cachedOtherPeers[i].blacklisted = verificationResult.status == 'fulfilled'
+          ? verificationResult.value.status !== 200
+          : true;
+      }
+      logger.debug("Cached other peers", cachedOtherPeers.map(
+        p => ({address: p.address, blacklisted: p.blacklisted})));
     } catch (e) {
       logger.error("Error while loading other peers info", e);
     }
@@ -31,4 +42,18 @@ export async function runOtherPeersTask(context: NodeContext) {
 
     }, context)
     .runSyncEvery(OTHER_PEERS_INTERVAL, true);
+}
+
+
+async function fetchWithTimeout(resource: string, options: { timeout?: number } = {}) {
+  const {timeout = 8000} = options;
+
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  const response = await fetch(resource, {
+    ...options,
+    signal: controller.signal
+  });
+  clearTimeout(id);
+  return response;
 }

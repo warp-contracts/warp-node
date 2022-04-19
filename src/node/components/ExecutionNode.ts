@@ -14,6 +14,7 @@ export type NodeData = {
   testnet: boolean,
   networkContractId: string,
   wallet: JWKInterface
+  blacklisted?: boolean
 }
 
 export class ExecutionNode {
@@ -40,7 +41,7 @@ export class ExecutionNode {
     await this.evalContracts();
     this.logger.info("✅ Initial contracts evaluation done.");
 
-    await this.networkService.connectToNetwork(this._nodeData);
+    //await this.networkService.connectToNetwork(this._nodeData);
     this.logger.info('✅ Successfully registered in network', this._nodeData.networkId);
 
     this.scheduleSyncTask();
