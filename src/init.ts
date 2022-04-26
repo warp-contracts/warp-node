@@ -19,8 +19,11 @@ import {ExecutionNode} from "./components/ExecutionNode";
 import {Snowball} from "./components/Snowball";
 import {runNetworkInfoCacheTask} from "./tasks/networkInfoCache";
 import {runOtherPeersTask} from "./tasks/otherPeersCache";
+import {runConsensusParamsTask} from "./tasks/consensusParamsCache";
 
 require("dotenv").config();
+
+const pjson = require('./../package.json');
 
 export interface NodeContext {
   db: Knex;
@@ -60,6 +63,7 @@ const argv = yargs(hideBin(process.argv)).parseSync();
   const wallet = readWallet();
   const jwkAddress = await arweave.wallets.getAddress(wallet);
   const nodeId = `${os.hostname()}_${port}_${jwkAddress}`;
+  const nodeVersion = pjson.version;
 
   if (testnet) {
     LoggerFactory.use(new TsLogFactory());
@@ -90,6 +94,7 @@ const argv = yargs(hideBin(process.argv)).parseSync();
   const networkContract = new NetworkContractService(contract, sdk, testnet);
   const nodeData = {
     nodeId,
+    version: nodeVersion,
     owner: jwkAddress,
     url,
     port,
@@ -100,8 +105,7 @@ const argv = yargs(hideBin(process.argv)).parseSync();
     wallet
   };
   const node = new ExecutionNode(nodeData, sdk, networkContract, arweave);
-  const consensusParams = await networkContract.consensusParams(node.nodeData);
-  const snowball = new Snowball(consensusParams);
+  const snowball = new Snowball();
 
   const app = new Koa<Application.DefaultState, NodeContext>();
 
@@ -119,6 +123,7 @@ const argv = yargs(hideBin(process.argv)).parseSync();
 
   await runNetworkInfoCacheTask(app.context);
   await runOtherPeersTask(app.context);
+  await runConsensusParamsTask(app.context);
 
   try {
     await node.registerInNetwork();

@@ -3,6 +3,7 @@ import {GossipQueryResult} from "../routes/gossip";
 import {LoggerFactory} from "redstone-smartweave";
 import {NodeData} from "./ExecutionNode";
 import {cachedOtherPeers} from "../tasks/otherPeersCache";
+import {cachedConsensusParams} from "../tasks/consensusParamsCache";
 
 export type ConsensusParams = {
   quorumSize: number;
@@ -17,9 +18,6 @@ const MAX_PREFERENCE_CHANGES = 5;
 export class Snowball {
   private readonly logger = LoggerFactory.INST.create("Snowball");
 
-  constructor(private readonly consensusParams: ConsensusParams) {
-  }
-
   async roll(
     ctx: Router.RouterContext,
     contractId: string,
@@ -27,12 +25,17 @@ export class Snowball {
     hash: string,
     upToTransactionId: string): Promise<{ preference: string, rounds: GossipQueryResult[][] }> {
 
+    const consensusParams = cachedConsensusParams;
+    if (consensusParams == null) {
+      throw new Error("Consensus params not available");
+    }
+    
     this.logger.info(`Starting snowball consensus on`, {
       contract: contractId,
       height,
       hash,
       upToTransactionId,
-      params: this.consensusParams,
+      params: consensusParams,
     });
 
     const internalCounts: { [item: string]: number } = {};
@@ -41,8 +44,8 @@ export class Snowball {
     if (!activePeers) {
       throw new Error("Cannot determine active peers.");
     }
-    if (activePeers.length < this.consensusParams.sampleSize) {
-      throw new Error(`Not enough active peers. Active ${activePeers.length}, sampleSize: ${this.consensusParams.sampleSize}`);
+    if (activePeers.length < consensusParams.sampleSize) {
+      throw new Error(`Not enough active peers. Active ${activePeers.length}, sampleSize: ${consensusParams.sampleSize}`);
     }
 
     this.logger.debug("Other active peers", activePeers.map(a => `${a.nodeId}: ${a.address}`));
@@ -60,7 +63,7 @@ export class Snowball {
       // TODO: round-robin? weighted round-robin based on nodes reputation?
       const randomPeers = activePeers
         .sort(() => 0.5 - Math.random())
-        .slice(0, this.consensusParams.sampleSize);
+        .slice(0, consensusParams.sampleSize);
 
       const round: GossipQueryResult[] = [];
       rounds.push(round);
@@ -90,14 +93,14 @@ export class Snowball {
         }
       }
 
-      if (round.length < this.consensusParams.sampleSize) {
+      if (round.length < consensusParams.sampleSize) {
         this.logger.warn("Not enough successful response from peers, moving to next round");
         continue;
       }
 
       const votesCounts = this.count(votes.map((item) => item.hash));
       for (const [peerHash, amount] of Object.entries(votesCounts)) {
-        if (amount >= this.consensusParams.quorumSize * this.consensusParams.sampleSize) {
+        if (amount >= consensusParams.quorumSize * consensusParams.sampleSize) {
           internalCounts[peerHash] = (internalCounts[peerHash] || 0) + 1;
 
           if (internalCounts[peerHash] >= internalCounts[preference]) {
@@ -116,7 +119,7 @@ export class Snowball {
               consecutiveSuccesses = 0;
             } else {
               consecutiveSuccesses++;
-              if (consecutiveSuccesses > this.consensusParams.decisionThreshold) {
+              if (consecutiveSuccesses > consensusParams.decisionThreshold) {
                 decided = true;
                 break;
               }

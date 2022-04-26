@@ -2,7 +2,9 @@ dist
 node_modules
 .idea
 db*.sqlite
-.secrets
+dist/.secrets
+dist/.db
 .db
+.secrets
 
 

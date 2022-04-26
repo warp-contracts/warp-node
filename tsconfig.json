@@ -20,7 +20,7 @@
     "files": true
   },
   "files": [
-    "src/node/init.ts",
-    "src/TsLogFactory.d.ts",
+    "src/init.ts",
+    "src/TsLogFactory.d.ts"
   ]
 }

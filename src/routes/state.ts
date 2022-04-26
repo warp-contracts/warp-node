@@ -7,6 +7,7 @@ export const state = async (ctx: Router.RouterContext) => {
   const contractId = ctx.query.id as string;
   const showValidity = ctx.query.validity === 'true';
   const snowball = ctx.query.snowball !== 'false';
+  const safeHeight = ctx.query.safeHeight === 'true';
 
   const networkContract: NetworkContractService = ctx.networkContract;
   const contracts: any[] = await networkContract.getContracts(ctx.node.nodeData);
@@ -17,7 +18,15 @@ export const state = async (ctx: Router.RouterContext) => {
   }
 
   // evaluate contract
-  const height = cachedNetworkInfo!!.height;
+  if (!cachedNetworkInfo || !cachedNetworkInfo.height) {
+    throw new Error("Network info not available");
+  }
+  let height = cachedNetworkInfo.height;
+  if (safeHeight) {
+    height--;
+  }
+
+  ctx.logger.info("Requested height", height);
 
   const contract: Contract<any> = ctx.sdk.contract(contractId).setEvaluationOptions({
     useFastCopy: true,
@@ -27,11 +36,10 @@ export const state = async (ctx: Router.RouterContext) => {
   const {state, validity} = await contract.readState(height);
   const keys = Object.keys(validity);
   const length = keys.length;
-  const transactionId = keys[length - 1];
-
-  if (!transactionId) {
-    throw new Error("Cannot determine transaction id");
+  if (length == 0) {
+    throw new Error("Contract has no registered interactions");
   }
+  const transactionId = keys[length - 1];
 
   const hash = contract.stateHash(state);
 
@@ -77,7 +85,6 @@ export const state = async (ctx: Router.RouterContext) => {
         }
       }
     }
-
 
     ctx.body = response;
     ctx.status = 200;

@@ -6,6 +6,7 @@ import {cachedNetworkInfo} from "../tasks/networkInfoCache";
 
 export type NodeData = {
   nodeId: string,
+  version: string,
   owner: string,
   url: string,
   port: number,

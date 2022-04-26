@@ -1,5 +1,5 @@
 const { parentPort } = require("worker_threads");
-const {sleep} = require("../../utils");
+const {sleep} = require("../utils");
 //
 parentPort.addListener("message", async ({ signal, port }) => {
 
