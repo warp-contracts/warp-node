@@ -2,7 +2,6 @@ import {JWKInterface} from "arweave/node/lib/wallet";
 import {LoggerFactory, SmartWeave} from "redstone-smartweave";
 import {NetworkContractService} from "./NetworkContractService";
 import Arweave from "arweave";
-import {cachedNetworkInfo} from "../tasks/networkInfoCache";
 import {cachedContracts} from "../tasks/contractsCache";
 
 export type NodeData = {
