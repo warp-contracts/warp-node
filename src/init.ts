@@ -20,10 +20,12 @@ import {Snowball} from "./components/Snowball";
 import {runNetworkInfoCacheTask} from "./tasks/networkInfoCache";
 import {runOtherPeersTask} from "./tasks/otherPeersCache";
 import {runConsensusParamsTask} from "./tasks/consensusParamsCache";
+import {runContractsTask} from "./tasks/contractsCache";
 
 require("dotenv").config();
 
 const pjson = require('./../package.json');
+const cors = require('@koa/cors');
 
 export interface NodeContext {
   db: Knex;
@@ -117,12 +119,19 @@ const argv = yargs(hideBin(process.argv)).parseSync();
   app.context.networkContract = networkContract;
   app.context.snowball = snowball;
   app.context.arweaveWrapper = new ArweaveWrapper(arweave);
+
+  app.use(cors({
+    async origin() {
+      return '*';
+    },
+  }));
   app.use(bodyParser());
   app.use(nodeRouter.routes());
   app.listen(port);
 
   await runNetworkInfoCacheTask(app.context);
   await runOtherPeersTask(app.context);
+  await runContractsTask(app.context);
   await runConsensusParamsTask(app.context);
 
   try {

@@ -4,14 +4,14 @@ import {TaskRunner} from "../components/TaskRunner";
 
 export const BLOCKS_INTERVAL_MS = 30 * 1000;
 
-export let cachedNetworkInfo: Partial<NetworkInfoInterface> | null = null;
+export let cachedNetworkInfo: NetworkInfoInterface | null = null;
 
 export async function runNetworkInfoCacheTask(context: NodeContext) {
   const {logger, arweaveWrapper} = context;
 
   async function updateNetworkInfo() {
     try {
-      cachedNetworkInfo = await arweaveWrapper.info();
+      cachedNetworkInfo = await arweaveWrapper.rGwInfo();
       logger.debug("New network height", cachedNetworkInfo.height);
     } catch (e) {
       logger.error("Error while loading network info", e);

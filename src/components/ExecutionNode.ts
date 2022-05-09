@@ -3,6 +3,7 @@ import {LoggerFactory, SmartWeave} from "redstone-smartweave";
 import {NetworkContractService} from "./NetworkContractService";
 import Arweave from "arweave";
 import {cachedNetworkInfo} from "../tasks/networkInfoCache";
+import {cachedContracts} from "../tasks/contractsCache";
 
 export type NodeData = {
   nodeId: string,
@@ -57,24 +58,15 @@ export class ExecutionNode {
   async evalContracts(): Promise<void> {
     this.logger.info(`💻 Evaluating contracts state`);
 
-    const contracts = await this.networkService.getContracts(this._nodeData); //TODO: cache
-    const arweaveHeight = cachedNetworkInfo!!.height!!;
-    const calculationHeight = arweaveHeight - 2;
+    const contracts = cachedContracts!!;
 
-    if (this.lastCalculatedHeight == calculationHeight) {
-      this.logger.info(`Cache for ${calculationHeight} already calculated.`);
-    }
-
-    this.logger.info("Evaluating contracts", {
-      currentHeight: arweaveHeight,
-      calculationHeight
-    });
+    this.logger.info("Evaluating contracts");
     const promises = contracts.map(c => {
       this.sdk.contract(c.arweaveTxId).setEvaluationOptions({
         useFastCopy: true,
         useVM2: true,
         manualCacheFlush: true
-      }).readState(calculationHeight);
+      }).readState();
     });
 
     try {
@@ -84,8 +76,6 @@ export class ExecutionNode {
     } catch (e: any) {
       this.logger.error(e);
     }
-
-    this.lastCalculatedHeight = calculationHeight!!;
   }
 
   scheduleSyncTask(): void {

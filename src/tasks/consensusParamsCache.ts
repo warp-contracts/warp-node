@@ -1,9 +1,8 @@
 import {NodeContext} from "../init";
 import {TaskRunner} from "../components/TaskRunner";
-import {NodeData} from "../components/ExecutionNode";
 import {ConsensusParams} from "../components/Snowball";
 
-export const CONSENSUS_PARAMS_INTERVAL = 60 * 1000;
+export const CONSENSUS_PARAMS_INTERVAL = 360 * 1000;
 
 export let cachedConsensusParams: ConsensusParams | null = null;
 

@@ -77,7 +77,7 @@ export class NetworkContractService {
       await this.sdk.arweave.api.get('mine');
       return result;
     } else {
-      return await this.contract.bundleInteraction(input, undefined, undefined, true);
+      return await this.contract.bundleInteraction(input, undefined, true);
     }
   }
 }
