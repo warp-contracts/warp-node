@@ -4,7 +4,7 @@
     "start": "node dist/init.js --port=8080 --testnet='false' --url='http://localhost' --networkId='redstone_network' --networkContractId='_dK3pzMY4b4VEG43suCw10mOwTTq8BrDlaszbQd5iHE'",
     "format": "prettier --write ."
   },
-  "version": "1.0.4",
+  "version": "1.0.6",
   "license": "MIT",
   "author": "Redstone Team <dev@redstone.finance>",
   "dependencies": {
