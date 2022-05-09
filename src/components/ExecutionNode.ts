@@ -65,7 +65,8 @@ export class ExecutionNode {
       this.sdk.contract(c.arweaveTxId).setEvaluationOptions({
         useFastCopy: true,
         useVM2: true,
-        manualCacheFlush: true
+        manualCacheFlush: true,
+        allowUnsafeClient: true
       }).readState();
     });
 
