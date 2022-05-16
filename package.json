@@ -1,7 +1,7 @@
 {
   "scripts": {
     "build": "tsc",
-    "start": "node dist/init.js --port=8080 --testnet='false' --url='http://localhost' --networkId='redstone_network' --networkContractId='_dK3pzMY4b4VEG43suCw10mOwTTq8BrDlaszbQd5iHE'",
+    "start": "node dist/init.js --port=8080 --testnet='false' --url='http://localhost' --networkId='ppe_testnet_1' --networkContractId='FxjoXsxQyuknaqaCV2Si7sq0TF3taBb8uTRmXmC6FQs'",
     "format": "prettier --write ."
   },
   "version": "1.0.6",

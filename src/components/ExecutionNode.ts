@@ -108,4 +108,8 @@ export class ExecutionNode {
       wallet: {} as JWKInterface
     };
   }
+
+  get wallet(): JWKInterface {
+    return this._nodeData.wallet;
+  }
 }

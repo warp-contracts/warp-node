@@ -1,5 +1,5 @@
 import Router from "@koa/router";
-import {GossipQueryResult} from "../routes/gossip";
+import {getSigData, GossipQueryResult} from "../routes/gossip";
 import {LoggerFactory} from "redstone-smartweave";
 import {NodeData} from "./ExecutionNode";
 import {cachedOtherPeers} from "../tasks/otherPeersCache";
@@ -48,8 +48,6 @@ export class Snowball {
       throw new Error(`Not enough active peers. Active ${activePeers.length}, sampleSize: ${consensusParams.sampleSize}`);
     }
 
-    this.logger.debug("Other active peers", activePeers.map(a => `${a.nodeId}: ${a.address}`));
-
     let decided = false;
     let preference = hash;
     let lastPreference = preference;
@@ -70,7 +68,7 @@ export class Snowball {
 
       this.logger.info(
         "Querying nodes",
-        randomPeers.map((p) => p.address).join(',\n')
+        randomPeers.map((p) => p.address).join(', ')
       );
 
       const peersQuery: Promise<Response>[] =
@@ -82,8 +80,20 @@ export class Snowball {
           const res = (result as PromiseFulfilledResult<Response>).value
           if (res.ok) {
             const data = await res.json() as unknown as GossipQueryResult;
-            votes.push(data);
-            round.push(data);
+
+            const verifyResult = await ctx.arweave.crypto.verify(
+              data.signature.owner,
+              await getSigData(ctx.arweave, data.signature.owner, data.hash),
+              ctx.arweave.utils.b64UrlToBuffer(data.signature.sig)
+            );
+            if (verifyResult) {
+              ctx.logger.info(`Signature verification successful for ${data.node.nodeId}`);
+              votes.push(data);
+              round.push(data);
+            } else {
+              ctx.logger.error("Signature verification failed for", JSON.stringify(data));
+            }
+
           } else {
             this.logger.error(res.statusText);
           }

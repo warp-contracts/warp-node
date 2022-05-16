@@ -1,10 +1,16 @@
 import Router from "@koa/router";
 import {NodeData} from "../components/ExecutionNode";
 import {Contract} from "redstone-smartweave";
+import deepHash from "arweave/node/lib/deepHash";
+import Arweave from "arweave";
 
 export type GossipQueryResult = {
   node: NodeData;
   hash: string;
+  signature: {
+    owner: string,
+    sig: string
+  }
 };
 
 export const gossipRoute = async (ctx: Router.RouterContext) => {
@@ -15,18 +21,28 @@ export const gossipRoute = async (ctx: Router.RouterContext) => {
 
   if (type === "query") {
     try {
-      ctx.logger.info("Querying state for", {
-        contractId,
-        height,
-      });
       const contract: Contract<any> = ctx.sdk.contract(contractId).setEvaluationOptions({
         useFastCopy: true,
         useVM2: true,
         manualCacheFlush: true
       });
       const {state} = await contract.readStateSequencer(height, upToTransactionId);
-      const hash = contract.stateHash(state);
-      ctx.body = {hash: hash, node: ctx.node.nodeData};
+      const stateHash = contract.stateHash(state);
+
+      const jwk = ctx.node.wallet;
+      const owner = jwk.n;
+
+      const dataToSign = await getSigData(ctx.arweave, owner, stateHash);
+      const rawSig = await ctx.arweave.crypto.sign(jwk, dataToSign);
+
+      ctx.body = {
+        hash: stateHash,
+        node: ctx.node.nodeData,
+        signature: {
+          owner: jwk.n,
+          sig: ctx.arweave.utils.bufferTob64Url(rawSig),
+        }
+      };
       ctx.status = 200;
     } catch (error: unknown) {
       ctx.body = {peer: ctx.whoami, error};
@@ -34,3 +50,10 @@ export const gossipRoute = async (ctx: Router.RouterContext) => {
     }
   }
 };
+
+export async function getSigData(arweave: Arweave, owner: string, stateHash: string) {
+  return await deepHash([
+    arweave.utils.stringToBuffer(stateHash),
+    arweave.utils.stringToBuffer(owner)
+  ]);
+}
