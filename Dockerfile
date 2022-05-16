@@ -19,5 +19,5 @@ RUN mkdir ./dist/.secrets
 # COPY .secrets/wallet.json ./dist/.secrets
 
 # Running redstone node
-ENTRYPOINT ["node", "dist/init.js", "--port=8080", "--testnet='false'", "--networkId='redstone_network'", "--networkContractId='_dK3pzMY4b4VEG43suCw10mOwTTq8BrDlaszbQd5iHE'"]
-CMD ["--url='http://localhost'"]
+ENTRYPOINT ["node", "dist/init.js", "--port=8080", "--testnet='false'"]
+CMD ["--networkId='redstone_network'", "--networkContractId='FxjoXsxQyuknaqaCV2Si7sq0TF3taBb8uTRmXmC6FQs'", "--url='http://localhost'"]

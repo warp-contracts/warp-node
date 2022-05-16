@@ -61,7 +61,7 @@ export class NetworkContractService {
     }
   }
 
-  async readState(): Promise<{state: any, validity: any}> {
+  async readState(): Promise<{ state: any, validity: any }> {
     return await this.contract
       .setEvaluationOptions({
         useFastCopy: true,
@@ -77,7 +77,9 @@ export class NetworkContractService {
       await this.sdk.arweave.api.get('mine');
       return result;
     } else {
-      return await this.contract.bundleInteraction(input, undefined, true);
+      return await this.contract.bundleInteraction(input, {
+        strict: true
+      });
     }
   }
 }
