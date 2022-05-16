@@ -19,7 +19,7 @@
     "koa": "2.13.4",
     "koa-bodyparser": "4.3.0",
     "koa-compress": "^5.1.0",
-    "redstone-smartweave": "0.4.83",
+    "redstone-smartweave": "0.5.3",
     "sqlite3": "5.0.5",
     "threads": "^1.7.0",
     "undici": "4.16.0",
