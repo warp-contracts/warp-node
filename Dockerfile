@@ -16,8 +16,7 @@ RUN yarn build
 
 RUN mkdir ./dist/.db
 RUN mkdir ./dist/.secrets
-# COPY .secrets/wallet.json ./dist/.secrets
 
-# Running redstone node
-ENTRYPOINT ["node", "dist/init.js", "--port=8080", "--testnet='false'"]
-CMD ["--networkId='redstone_network'", "--networkContractId='FxjoXsxQyuknaqaCV2Si7sq0TF3taBb8uTRmXmC6FQs'", "--url='http://localhost'"]
+# Running node
+ENTRYPOINT ["node", "dist/init.js"]
+CMD ["--port=8080", "--testnet='false'", "--networkId='redstone_network'", "--networkContractId='FxjoXsxQyuknaqaCV2Si7sq0TF3taBb8uTRmXmC6FQs'", "--url='http://localhost'"]
