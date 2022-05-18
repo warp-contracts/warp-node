@@ -3,6 +3,12 @@ RedStone DEN is a network of nodes that performs an execution of registered Smar
 The consensus between the nodes is achieved via Snowball Loop algorithm
 [Snowball Loop algorithm](https://ipfs.io/ipfs/QmUy4jh5mGNZvLkjies1RWM4YuvJh5o2FYopNPVYwrRVGV) (page 4., Figure 3.).
 
+- [Installation](#installation)
+- [Running node - Docker](#running-node---docker)
+- [Endpoints](#endpoints)
+- [DEN Contract](#den-contract)
+- [Licensing](#licensing)
+
 ### Installation
 
 1. `yarn install`
@@ -118,3 +124,7 @@ All DENs are registered within a SmartWeave contract (at the time of writing the
 The contract gives an option to register/unregister contracts (by the given DEN operator), register nodes, change network's consensus params, etc.
 
 In the future the staking/slashing features will be added.
+
+
+### Licensing
+The primary license for RedStone Distributed Execution Network Node is the Business Source License 1.1 (BUSL-1.1), see [LICENSE](https://github.com/redstone-finance/redstone-sw-node/blob/main/LICENSE)
