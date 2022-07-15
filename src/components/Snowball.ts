@@ -1,6 +1,6 @@
 import Router from "@koa/router";
 import {getSigData, GossipQueryResult} from "../routes/gossip";
-import {LoggerFactory} from "redstone-smartweave";
+import {LoggerFactory} from "warp-contracts";
 import {NodeData} from "./ExecutionNode";
 import {cachedOtherPeers} from "../tasks/otherPeersCache";
 import {cachedConsensusParams} from "../tasks/consensusParamsCache";
@@ -83,7 +83,7 @@ export class Snowball {
 
             const verifyResult = await ctx.arweave.crypto.verify(
               data.signature.owner,
-              await getSigData(ctx.arweave, data.signature.owner, data.hash),
+              await getSigData(ctx.arweave, data.signature.owner, data.hash, upToTransactionId, contractId),
               ctx.arweave.utils.b64UrlToBuffer(data.signature.sig)
             );
             if (verifyResult) {

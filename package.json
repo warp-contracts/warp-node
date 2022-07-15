@@ -1,28 +1,31 @@
 {
+  "name": "warp-sw-node",
+  "version": "1.0.9",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/init.js --port=8080 --testnet='false' --url='http://localhost' --networkId='ppe_testnet_1' --networkContractId='FxjoXsxQyuknaqaCV2Si7sq0TF3taBb8uTRmXmC6FQs'",
+    "start": "node dist/init.js --port=8080 --testnet='false' --url='http://localhost' --networkId='all_pst' --networkContractId='qiu87_kT27m3d0LILj-AAaLfsQT6mHauOeZBJCMXutE'",
     "format": "prettier --write ."
   },
-  "version": "1.0.8",
   "license": "MIT",
   "author": "Redstone Team <dev@redstone.finance>",
   "dependencies": {
     "@koa/cors": "3.3.0",
     "@koa/router": "10.1.1",
     "@types/yargs": "^17.0.9",
-    "arweave": "1.10.23",
+    "arweave": "1.11.4",
     "axios": "0.24.0",
+    "better-sqlite3": "7.6.2",
     "catch-exit": "^1.2.2",
     "dotenv": "10.0.0",
-    "knex": "0.95.14",
+    "knex": "^2.2.0",
     "koa": "2.13.4",
     "koa-bodyparser": "4.3.0",
     "koa-compress": "^5.1.0",
-    "redstone-smartweave": "0.5.3",
-    "sqlite3": "5.0.5",
+    "p-limit": "^3.1.0",
+    "promise-call-limit": "^1.0.1",
     "threads": "^1.7.0",
     "undici": "4.16.0",
+    "warp-contracts": "1.2.0-ivm.2",
     "yargs": "^17.3.1"
   },
   "devDependencies": {

@@ -1,17 +1,23 @@
 import {NodeContext} from "../init";
 import {TaskRunner} from "../components/TaskRunner";
-import {ConsensusParams} from "../components/Snowball";
 
 export const CONTRACTS_INTERVAL = 90 * 1000;
 
 export let cachedContracts: any[] | null = null;
+export let cachedContractGroups: string[] | null = null;
+export let cachedEvaluatedContracts: string[] | null = null;
+export let cachedLastSortKey: string | null = null;
 
 export async function runContractsTask(context: NodeContext) {
-  const {logger} = context;
+  const {logger, contractsSdk} = context;
 
   async function updateContracts() {
     try {
-      cachedContracts = await context.networkContract.getContracts(context.node.nodeData);
+      const result = await context.networkContract.getContractsAndGroups(context.node.nodeData);
+      cachedContracts = result.contracts;
+      cachedContractGroups = result.contractGroups;
+      cachedEvaluatedContracts = await contractsSdk.stateEvaluator.allCachedContracts();
+      cachedLastSortKey = await contractsSdk.stateEvaluator.lastCachedSortKey();
     } catch (e) {
       logger.error("Error while loading consensus params", e);
     }

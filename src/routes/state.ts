@@ -1,7 +1,7 @@
 import Router from "@koa/router";
 import {NetworkContractService} from "../components/NetworkContractService";
 import {cachedNetworkInfo} from "../tasks/networkInfoCache";
-import {Contract} from "redstone-smartweave";
+import {Contract} from "warp-contracts";
 
 export const state = async (ctx: Router.RouterContext) => {
   const contractId = ctx.query.id as string;
@@ -10,8 +10,11 @@ export const state = async (ctx: Router.RouterContext) => {
   const safeHeight = ctx.query.safeHeight === 'true';
 
   const networkContract: NetworkContractService = ctx.networkContract;
-  const contracts: any[] = await networkContract.getContracts(ctx.node.nodeData);
-  if (!contracts.some(c => c.arweaveTxId == contractId)) {
+
+  // TODO: groups
+  const contracts: any[] = (await networkContract.getContractsAndGroups(ctx.node.nodeData)).contracts;
+  if (!contracts.some(c => c.arweaveTxId == contractId)
+    && !(await ctx.contractsSdk.stateEvaluator.hasContractCached(contractId))) {
     ctx.body = {error: `Contract ${contractId} not registered in network ${ctx.node.nodeData.nodeId}.`};
     ctx.status = 500;
     return;
@@ -28,7 +31,7 @@ export const state = async (ctx: Router.RouterContext) => {
 
   ctx.logger.info("Requested height", height);
 
-  const contract: Contract<any> = ctx.sdk.contract(contractId).setEvaluationOptions({
+  const contract: Contract<any> = ctx.contractsSdk.contract(contractId).setEvaluationOptions({
     useFastCopy: true,
     useVM2: true,
     manualCacheFlush: true

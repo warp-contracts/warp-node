@@ -1,6 +1,6 @@
 import Router from "@koa/router";
 import {NodeData} from "../components/ExecutionNode";
-import {Contract} from "redstone-smartweave";
+import {Contract} from "warp-contracts";
 import deepHash from "arweave/node/lib/deepHash";
 import Arweave from "arweave";
 
@@ -26,13 +26,13 @@ export const gossipRoute = async (ctx: Router.RouterContext) => {
         useVM2: true,
         manualCacheFlush: true
       });
-      const {state} = await contract.readStateSequencer(height, upToTransactionId);
+      const {state} = await contract.readState(upToTransactionId);
       const stateHash = contract.stateHash(state);
 
       const jwk = ctx.node.wallet;
       const owner = jwk.n;
 
-      const dataToSign = await getSigData(ctx.arweave, owner, stateHash);
+      const dataToSign = await getSigData(ctx.arweave, owner, stateHash, upToTransactionId, contractId);
       const rawSig = await ctx.arweave.crypto.sign(jwk, dataToSign);
 
       ctx.body = {
@@ -51,9 +51,13 @@ export const gossipRoute = async (ctx: Router.RouterContext) => {
   }
 };
 
-export async function getSigData(arweave: Arweave, owner: string, stateHash: string) {
+export async function getSigData(
+  arweave: Arweave,
+  owner: string, stateHash: string, transactionId: string, contractId: string) {
   return await deepHash([
-    arweave.utils.stringToBuffer(stateHash),
-    arweave.utils.stringToBuffer(owner)
+    arweave.utils.stringToBuffer(owner),
+    arweave.utils.stringToBuffer(transactionId),
+    arweave.utils.stringToBuffer(contractId),
+    arweave.utils.stringToBuffer(stateHash)
   ]);
 }

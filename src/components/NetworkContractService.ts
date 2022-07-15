@@ -1,14 +1,14 @@
-import {Contract, SmartWeave} from "redstone-smartweave";
 import {NodeData} from "./ExecutionNode";
 import {ConsensusParams} from "./Snowball";
+import {Contract, Warp} from "warp-contracts";
 
 /**
- * A wrapper for SmartWeave "network" contract.
+ * A wrapper for Warp "network" contract.
  */
 export class NetworkContractService {
   constructor(
     private readonly contract: Contract<any>,
-    private readonly sdk: SmartWeave,
+    private readonly sdk: Warp,
     private readonly testnet: boolean) {
   }
 
@@ -36,15 +36,18 @@ export class NetworkContractService {
     });
   }
 
-  async getContracts(nodeData: NodeData): Promise<any[]> {
-    const {state, validity} = await this.readState();
-    const contracts = state.networks[nodeData.networkId].contracts;
-    return contracts;
+  async getContractsAndGroups(nodeData: NodeData): Promise<{contracts: any[], contractGroups: string[]}> {
+    const {state} = await this.readState();
+    return  {
+      contracts: state.networks[nodeData.networkId].contracts,
+      contractGroups: state.networks[nodeData.networkId].contractGroups
+    };
   }
 
   async getOtherNodes(nodeData: NodeData): Promise<any[]> {
     const {state, validity} = await this.readState();
     const networkId = nodeData.networkId;
+
     const nodes = state.networks[networkId].connectedNodes;
     return Object.keys(nodes).filter((n: string) => n != nodeData.nodeId).map(k => nodes[k]);
   }
@@ -55,9 +58,9 @@ export class NetworkContractService {
     const consensusParams = state.networks[networkId].consensusParams;
 
     return {
-      quorumSize: parseInt(consensusParams.quorumSize),
+      quorumSize: parseFloat(consensusParams.quorumSize),
       sampleSize: parseInt(consensusParams.sampleSize),
-      decisionThreshold: parseFloat(consensusParams.decisionThreshold)
+      decisionThreshold: parseInt(consensusParams.decisionThreshold)
     }
   }
 
@@ -65,19 +68,20 @@ export class NetworkContractService {
     return await this.contract
       .setEvaluationOptions({
         useFastCopy: true,
-        useVM2: true,
-        manualCacheFlush: true
       })
       .readState();
   }
 
   private async writeInteraction(input: any): Promise<any> {
     if (this.testnet) {
-      const result = await this.contract.writeInteraction(input, undefined, undefined, true);
+      const result = await this.contract.writeInteraction(input, {
+        disableBundling: true,
+        strict: true
+      });
       await this.sdk.arweave.api.get('mine');
       return result;
     } else {
-      return await this.contract.bundleInteraction(input, {
+      return await this.contract.writeInteraction(input, {
         strict: true
       });
     }

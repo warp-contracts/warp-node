@@ -11,7 +11,7 @@ export async function runNetworkInfoCacheTask(context: NodeContext) {
 
   async function updateNetworkInfo() {
     try {
-      cachedNetworkInfo = await arweaveWrapper.rGwInfo();
+      cachedNetworkInfo = await arweaveWrapper.warpGwInfo();
       logger.debug("New network height", cachedNetworkInfo.height);
     } catch (e) {
       logger.error("Error while loading network info", e);
