@@ -4,8 +4,7 @@ import Koa from "koa";
 import Application from "koa";
 import bodyParser from "koa-bodyparser";
 import nodeRouter from "./nodeRouter";
-import {ArweaveWrapper, LoggerFactory, RedStoneLogger, SmartWeave,} from "redstone-smartweave";
-import {TsLogFactory} from "redstone-smartweave/lib/cjs/logging/node/TsLogFactory";
+import {ArweaveWrapper, LoggerFactory, Warp, WarpLogger} from "warp-contracts";
 import {initArweave} from "./arweave";
 import Arweave from "arweave";
 import * as os from "os";
@@ -30,8 +29,8 @@ const cors = require('@koa/cors');
 export interface NodeContext {
   db: Knex;
   gatewayDb: Knex;
-  sdk: SmartWeave;
-  logger: RedStoneLogger;
+  contractsSdk: Warp;
+  logger: WarpLogger;
   node: ExecutionNode;
   networkContract: NetworkContractService;
   network: string;
@@ -40,19 +39,12 @@ export interface NodeContext {
   testnet: boolean;
   snowball: Snowball;
   arweaveWrapper: ArweaveWrapper;
+  statsDb: Knex;
 }
 
 const argv = yargs(hideBin(process.argv)).parseSync();
 
 (async () => {
-  process
-      .on('unhandledRejection', (reason, p) => {
-        console.error(reason, 'Unhandled Rejection at Promise', p);
-      })
-      .on('uncaughtException', err => {
-        console.error(err, 'Uncaught Exception thrown');
-      });
-
   const url = argv.url as string;
   const port = (argv.port || 5777) as number;
   const address = `${argv.url}:${port}`;
@@ -60,40 +52,47 @@ const argv = yargs(hideBin(process.argv)).parseSync();
   const networkId = argv.networkId as string;
   const networkContractId = argv.networkContractId as string;
 
-  const dbPath = path.join(__dirname, '.db');
+  const denContractCachePath = path.join(__dirname, 'cache', 'den');
+  const contractsCachePath = path.join(__dirname, 'cache', 'contracts');
   const arweave = initArweave(testnet);
   const wallet = readWallet();
   const jwkAddress = await arweave.wallets.getAddress(wallet);
   const nodeId = `${os.hostname()}_${port}_${jwkAddress}`;
   const nodeVersion = pjson.version;
 
-  if (testnet) {
-    LoggerFactory.use(new TsLogFactory());
-  }
   LoggerFactory.INST.setOptions({
     displayInstanceName: true,
     instanceName: port,
   });
-  LoggerFactory.INST.logLevel("error");
+  LoggerFactory.INST.logLevel("fatal");
   LoggerFactory.INST.logLevel("fatal", "WASM:AS");
   LoggerFactory.INST.logLevel("debug", "node");
   LoggerFactory.INST.logLevel("debug", "ExecutionNode");
   LoggerFactory.INST.logLevel("debug", "NetworkContractService");
   LoggerFactory.INST.logLevel("debug", "Snowball");
+  LoggerFactory.INST.logLevel("info", "HandlerBasedContract");
   const logger = LoggerFactory.INST.create("node");
 
-  if (!fs.existsSync(dbPath)) {
-    fs.mkdirSync(dbPath);
-  }
-  const {sdk, contract, db} = await connectSdk(
-    arweave,
-    dbPath,
-    testnet,
-    networkContractId,
-    wallet,
-    port);
+  process
+    .on('unhandledRejection', (reason, p) => {
+      logger.error('Unhandled Rejection at Promise');
+    })
+    .on('uncaughtException', err => {
+      logger.error('Uncaught Exception thrown');
+    });
 
-  const networkContract = new NetworkContractService(contract, sdk, testnet);
+  if (!fs.existsSync(denContractCachePath)) {
+    fs.mkdirSync(denContractCachePath, {recursive: true});
+  }
+  if (!fs.existsSync(contractsCachePath)) {
+    fs.mkdirSync(contractsCachePath, {recursive: true});
+  }
+
+  const denSdk = await connectSdk(arweave, denContractCachePath, testnet);
+  const contractsSdk = await connectSdk(arweave, contractsCachePath, testnet);
+  const denContract = denSdk.contract<any>(networkContractId).connect(wallet);
+
+  const networkContract = new NetworkContractService(denContract, denSdk, testnet);
   const nodeData = {
     nodeId,
     version: nodeVersion,
@@ -106,19 +105,21 @@ const argv = yargs(hideBin(process.argv)).parseSync();
     networkContractId,
     wallet
   };
-  const node = new ExecutionNode(nodeData, sdk, networkContract, arweave);
+  const node = new ExecutionNode(nodeData, contractsSdk, networkContract, arweave);
   const snowball = new Snowball();
 
   const app = new Koa<Application.DefaultState, NodeContext>();
 
-  app.context.db = db;
   app.context.arweave = arweave;
-  app.context.sdk = sdk;
+  app.context.contractsSdk = contractsSdk;
   app.context.logger = logger;
   app.context.node = node;
   app.context.networkContract = networkContract;
   app.context.snowball = snowball;
   app.context.arweaveWrapper = new ArweaveWrapper(arweave);
+  /*app.context.statsDb = new Knex({
+
+  });*/
 
   app.use(cors({
     async origin() {
@@ -138,8 +139,7 @@ const argv = yargs(hideBin(process.argv)).parseSync();
     await node.registerInNetwork();
   } catch (e) {
     logger.error(e);
-    /*await node.disconnectFromNetwork();
-    await node.registerInNetwork();*/
+    // TODO: should probably exit here...
   }
 })();
 
