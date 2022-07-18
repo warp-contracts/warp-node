@@ -5,7 +5,6 @@ import Application from "koa";
 import bodyParser from "koa-bodyparser";
 import nodeRouter from "./nodeRouter";
 import {ArweaveWrapper, LoggerFactory, WarpLogger, Warp} from "warp-contracts";
-import {TsLogFactory} from "warp-contracts/lib/cjs/logging/node/TsLogFactory";
 import {initArweave} from "./arweave";
 import Arweave from "arweave";
 import * as os from "os";
@@ -30,7 +29,7 @@ const cors = require('@koa/cors');
 export interface NodeContext {
   db: Knex;
   gatewayDb: Knex;
-  sdk: Warp;
+  contractsSdk: Warp;
   logger: WarpLogger;
   node: ExecutionNode;
   networkContract: NetworkContractService;
@@ -47,7 +46,7 @@ const argv = yargs(hideBin(process.argv)).parseSync();
 (async () => {
   process
       .on('unhandledRejection', (reason, p) => {
-        console.error(reason, 'Unhandled Rejection at Promise', p);
+        console.error(reason, 'Unhandled Rejection at Promise');
       })
       .on('uncaughtException', err => {
         console.error(err, 'Uncaught Exception thrown');
@@ -60,16 +59,14 @@ const argv = yargs(hideBin(process.argv)).parseSync();
   const networkId = argv.networkId as string;
   const networkContractId = argv.networkContractId as string;
 
-  const dbPath = path.join(__dirname, '.db');
+  const denDbPath = path.join(__dirname, '.db', 'den');
+  const contractsDbPath = path.join(__dirname, '.db', 'contracts');
   const arweave = initArweave(testnet);
   const wallet = readWallet();
   const jwkAddress = await arweave.wallets.getAddress(wallet);
   const nodeId = `${os.hostname()}_${port}_${jwkAddress}`;
   const nodeVersion = pjson.version;
 
-  if (testnet) {
-    LoggerFactory.use(new TsLogFactory());
-  }
   LoggerFactory.INST.setOptions({
     displayInstanceName: true,
     instanceName: port,
@@ -80,20 +77,37 @@ const argv = yargs(hideBin(process.argv)).parseSync();
   LoggerFactory.INST.logLevel("debug", "ExecutionNode");
   LoggerFactory.INST.logLevel("debug", "NetworkContractService");
   LoggerFactory.INST.logLevel("debug", "Snowball");
+  // LoggerFactory.INST.logLevel("debug", "HandlerBasedContract");
+  // LoggerFactory.INST.logLevel("debug", "ArweaveGatewayInteractionsLoader");
   const logger = LoggerFactory.INST.create("node");
 
-  if (!fs.existsSync(dbPath)) {
-    fs.mkdirSync(dbPath);
+  if (!fs.existsSync(denDbPath)) {
+    fs.mkdirSync(denDbPath, {recursive: true});
   }
-  const {sdk, contract, db} = await connectSdk(
-    arweave,
-    dbPath,
-    testnet,
-    networkContractId,
-    wallet,
+  if (!fs.existsSync(contractsDbPath)) {
+    fs.mkdirSync(contractsDbPath, {recursive: true});
+  }
+  const denSdk = await connectSdk(
+    Arweave.init({
+      host: "arweave.net",
+      port: 443,
+      protocol: "https",
+      timeout: 60000,
+      logging: false,
+    }),
+    denDbPath,
+    false,
     port);
 
-  const networkContract = new NetworkContractService(contract, sdk, testnet);
+  const contractsSdk = await connectSdk(
+    arweave,
+    contractsDbPath,
+    testnet,
+    port);
+
+  const denContract = denSdk.contract<any>(networkContractId).connect(wallet);
+
+  const networkContract = new NetworkContractService(denContract, denSdk, false);
   const nodeData = {
     nodeId,
     version: nodeVersion,
@@ -102,18 +116,17 @@ const argv = yargs(hideBin(process.argv)).parseSync();
     port,
     address,
     networkId,
-    testnet,
+    testnet: false,
     networkContractId,
     wallet
   };
-  const node = new ExecutionNode(nodeData, sdk, networkContract, arweave);
+  const node = new ExecutionNode(nodeData, contractsSdk, networkContract, arweave);
   const snowball = new Snowball();
 
   const app = new Koa<Application.DefaultState, NodeContext>();
 
-  app.context.db = db;
   app.context.arweave = arweave;
-  app.context.sdk = sdk;
+  app.context.contractsSdk = contractsSdk;
   app.context.logger = logger;
   app.context.node = node;
   app.context.networkContract = networkContract;
@@ -137,7 +150,7 @@ const argv = yargs(hideBin(process.argv)).parseSync();
   try {
     await node.registerInNetwork();
   } catch (e) {
-    logger.error(e);
+    logger.error('Error while registering in network', e);
     /*await node.disconnectFromNetwork();
     await node.registerInNetwork();*/
   }

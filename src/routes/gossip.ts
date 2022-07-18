@@ -21,10 +21,11 @@ export const gossipRoute = async (ctx: Router.RouterContext) => {
 
   if (type === "query") {
     try {
-      const contract: Contract<any> = ctx.sdk.contract(contractId).setEvaluationOptions({
+      const contract: Contract<any> = ctx.contractsSdk.contract(contractId).setEvaluationOptions({
         useFastCopy: true,
         useVM2: true,
-        manualCacheFlush: true
+        manualCacheFlush: true,
+        internalWrites: true
       });
       const {state} = await contract.readStateSequencer(height, upToTransactionId);
       const stateHash = contract.stateHash(state);

@@ -3,7 +3,7 @@ import {NodeData} from "./ExecutionNode";
 import {ConsensusParams} from "./Snowball";
 
 /**
- * A wrapper for SmartWeave "network" contract.
+ * A wrapper for Warp "DEN" contract.
  */
 export class NetworkContractService {
   constructor(
@@ -65,8 +65,7 @@ export class NetworkContractService {
     return await this.contract
       .setEvaluationOptions({
         useFastCopy: true,
-        useVM2: true,
-        manualCacheFlush: true
+        useVM2: true
       })
       .readState();
   }

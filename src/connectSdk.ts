@@ -1,33 +1,29 @@
 import Arweave from "arweave";
-import {Contract, Warp, WarpNodeFactory} from "warp-contracts";
-import {Knex, knex} from "knex";
-import {JWKInterface} from "arweave/node/lib/wallet";
+import {Warp, WarpNodeFactory} from "warp-contracts";
+import {knex} from "knex";
 
 export async function connectSdk(
   arweave: Arweave,
   cacheDir: string,
   testnet: boolean,
-  networkContractId: string,
-  jwk: JWKInterface,
   port: number
-): Promise<{ sdk: Warp, contract: Contract<any>, db: Knex}> {
+): Promise<Warp> {
   const db = knex({
     client: 'sqlite3',
     connection: {
-      filename: `${cacheDir}/contracts-${port}.sqlite`
+      filename: `${cacheDir}/${port}.sqlite`
     },
     useNullAsDefault: true
   });
 
   let sdk: Warp;
   if (testnet) {
-    sdk = await WarpNodeFactory.knexCached(arweave, db);
+    sdk = (await WarpNodeFactory.knexCachedBased(arweave, db)).useArweaveGateway().build();
   } else {
     sdk = (await WarpNodeFactory.knexCachedBased(arweave, db))
       .useWarpGateway({confirmed: true})
       .build();
   }
 
-  const contract = sdk.contract<any>(networkContractId).connect(jwk);
-  return {sdk, contract, db};
+  return sdk;
 }

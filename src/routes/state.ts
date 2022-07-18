@@ -28,10 +28,11 @@ export const state = async (ctx: Router.RouterContext) => {
 
   ctx.logger.info("Requested height", height);
 
-  const contract: Contract<any> = ctx.sdk.contract(contractId).setEvaluationOptions({
+  const contract: Contract<any> = ctx.contractsSdk.contract(contractId).setEvaluationOptions({
     useFastCopy: true,
     useVM2: true,
-    manualCacheFlush: true
+    manualCacheFlush: true,
+    internalWrites: true
   });
   const {state, validity} = await contract.readState(height);
   const keys = Object.keys(validity);

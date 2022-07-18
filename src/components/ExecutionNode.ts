@@ -31,7 +31,7 @@ export class ExecutionNode {
     private readonly networkService: NetworkContractService,
     private readonly arweave: Arweave,
   ) {
-    this.logger.info('🚀🚀🚀 Starting execution node with params:', {..._nodeData, wallet:''});
+    this.logger.info('🚀🚀🚀 Starting execution node with params:', {..._nodeData, wallet: ''});
     this.evalContracts = this.evalContracts.bind(this);
   }
 
@@ -60,21 +60,23 @@ export class ExecutionNode {
     const contracts = cachedContracts!!;
 
     this.logger.info("Evaluating contracts");
-    const promises = contracts.map(c => {
-      this.sdk.contract(c.arweaveTxId).setEvaluationOptions({
-        useFastCopy: true,
-        useVM2: true,
-        manualCacheFlush: true,
-        allowUnsafeClient: true
-      }).readState();
-    });
-
+    this.evaluating = true;
     try {
-      await Promise.allSettled(promises);
+      for (const c of contracts) {
+        this.logger.debug(`Evaluating contract ${c.arweaveTxId}`);
+        await this.sdk.contract(c.arweaveTxId).setEvaluationOptions({
+          useFastCopy: true,
+          useVM2: true,
+          manualCacheFlush: true,
+          internalWrites: true
+        }).readState();
+      }
       this.logger.info(`📓 Storing contracts state`);
       await this.sdk.flushCache();
     } catch (e: any) {
       this.logger.error(e);
+    } finally {
+      this.evaluating = false;
     }
   }
 
@@ -90,14 +92,9 @@ export class ExecutionNode {
           node.logger.info("Still evaluating previous round...");
           return;
         }
-        node.evaluating = true;
-        try {
-          await evalContracts();
-        } finally {
-          node.evaluating = false;
-        }
+        await evalContracts();
         workerLoop();
-      }, 10000);
+      }, 30000);
     })();
   }
 
