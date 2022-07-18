@@ -1,7 +1,7 @@
 import Router from "@koa/router";
 import {NetworkContractService} from "../components/NetworkContractService";
 import {cachedNetworkInfo} from "../tasks/networkInfoCache";
-import {Contract} from "redstone-smartweave";
+import {Contract} from "warp-contracts";
 
 export const state = async (ctx: Router.RouterContext) => {
   const contractId = ctx.query.id as string;

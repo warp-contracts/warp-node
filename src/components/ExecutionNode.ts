@@ -1,5 +1,5 @@
 import {JWKInterface} from "arweave/node/lib/wallet";
-import {LoggerFactory, SmartWeave} from "redstone-smartweave";
+import {LoggerFactory, Warp} from "warp-contracts";
 import {NetworkContractService} from "./NetworkContractService";
 import Arweave from "arweave";
 import {cachedContracts} from "../tasks/contractsCache";
@@ -27,7 +27,7 @@ export class ExecutionNode {
 
   constructor(
     private readonly _nodeData: NodeData,
-    private readonly sdk: SmartWeave,
+    private readonly sdk: Warp,
     private readonly networkService: NetworkContractService,
     private readonly arweave: Arweave,
   ) {

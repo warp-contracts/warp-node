@@ -1,4 +1,4 @@
-import {Contract, SmartWeave} from "redstone-smartweave";
+import {Contract, Warp} from "warp-contracts";
 import {NodeData} from "./ExecutionNode";
 import {ConsensusParams} from "./Snowball";
 
@@ -8,7 +8,7 @@ import {ConsensusParams} from "./Snowball";
 export class NetworkContractService {
   constructor(
     private readonly contract: Contract<any>,
-    private readonly sdk: SmartWeave,
+    private readonly sdk: Warp,
     private readonly testnet: boolean) {
   }
 

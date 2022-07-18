@@ -1,6 +1,6 @@
 import Router from "@koa/router";
 import {NodeData} from "../components/ExecutionNode";
-import {Contract} from "redstone-smartweave";
+import {Contract} from "warp-contracts";
 import deepHash from "arweave/node/lib/deepHash";
 import Arweave from "arweave";
 

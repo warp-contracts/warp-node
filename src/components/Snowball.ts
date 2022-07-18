@@ -1,6 +1,6 @@
 import Router from "@koa/router";
 import {getSigData, GossipQueryResult} from "../routes/gossip";
-import {LoggerFactory} from "redstone-smartweave";
+import {LoggerFactory} from "warp-contracts";
 import {NodeData} from "./ExecutionNode";
 import {cachedOtherPeers} from "../tasks/otherPeersCache";
 import {cachedConsensusParams} from "../tasks/consensusParamsCache";
