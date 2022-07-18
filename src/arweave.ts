@@ -3,7 +3,7 @@ import Arweave from "arweave";
 export const initArweave = (testnet: boolean): Arweave => {
   if (testnet) {
     return Arweave.init({
-      host: "testnet.redstone.tools",
+      host: "arweave.testnet1.bundlr.network",
       port: 443,
       protocol: "https"
     });

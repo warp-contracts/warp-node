@@ -25,6 +25,7 @@ require("dotenv").config();
 
 const pjson = require('./../package.json');
 const cors = require('@koa/cors');
+const compress = require('koa-compress');
 
 export interface NodeContext {
   db: Knex;
@@ -52,8 +53,8 @@ const argv = yargs(hideBin(process.argv)).parseSync();
   const networkId = argv.networkId as string;
   const networkContractId = argv.networkContractId as string;
 
-  const denContractCachePath = path.join(__dirname, 'cache', 'den');
-  const contractsCachePath = path.join(__dirname, 'cache', 'contracts');
+  const denContractCachePath = path.join(__dirname, 'cache', port.toString(), 'den');
+  const contractsCachePath = path.join(__dirname, 'cache', port.toString(), 'contracts');
   const arweave = initArweave(testnet);
   const wallet = readWallet();
   const jwkAddress = await arweave.wallets.getAddress(wallet);
@@ -70,7 +71,7 @@ const argv = yargs(hideBin(process.argv)).parseSync();
   LoggerFactory.INST.logLevel("debug", "ExecutionNode");
   LoggerFactory.INST.logLevel("debug", "NetworkContractService");
   LoggerFactory.INST.logLevel("debug", "Snowball");
-  LoggerFactory.INST.logLevel("info", "HandlerBasedContract");
+  LoggerFactory.INST.logLevel("debug", "DefaultStateEvaluator");
   const logger = LoggerFactory.INST.create("node");
 
   process
@@ -88,11 +89,11 @@ const argv = yargs(hideBin(process.argv)).parseSync();
     fs.mkdirSync(contractsCachePath, {recursive: true});
   }
 
-  const denSdk = await connectSdk(arweave, denContractCachePath, testnet);
+  const denSdk = await connectSdk(arweave, denContractCachePath, false);
   const contractsSdk = await connectSdk(arweave, contractsCachePath, testnet);
   const denContract = denSdk.contract<any>(networkContractId).connect(wallet);
 
-  const networkContract = new NetworkContractService(denContract, denSdk, testnet);
+  const networkContract = new NetworkContractService(denContract, denSdk, false);
   const nodeData = {
     nodeId,
     version: nodeVersion,
@@ -101,7 +102,7 @@ const argv = yargs(hideBin(process.argv)).parseSync();
     port,
     address,
     networkId,
-    testnet,
+    testnet: false, // the bundlr contracts are on testnet, but the den contract is on mainnet.
     networkContractId,
     wallet
   };
@@ -117,9 +118,6 @@ const argv = yargs(hideBin(process.argv)).parseSync();
   app.context.networkContract = networkContract;
   app.context.snowball = snowball;
   app.context.arweaveWrapper = new ArweaveWrapper(arweave);
-  /*app.context.statsDb = new Knex({
-
-  });*/
 
   app.use(cors({
     async origin() {
@@ -127,6 +125,12 @@ const argv = yargs(hideBin(process.argv)).parseSync();
     },
   }));
   app.use(bodyParser());
+  app.use(compress({
+    threshold: 2048,
+    deflate: false,
+    br: false
+  }));
+
   app.use(nodeRouter.routes());
   app.listen(port);
 

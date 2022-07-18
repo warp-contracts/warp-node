@@ -23,7 +23,8 @@ export type NodeData = {
 const sdkOptions = {
   useFastCopy: true,
   useVM2: true,
-  allowUnsafeClient: true
+  allowUnsafeClient: true,
+  internalWrites: true
 };
 
 // assuming 2 threads per core...
@@ -63,7 +64,7 @@ export class ExecutionNode {
       this.logger.error(e);
     }
 
-    this.scheduleSyncTask();
+    //this.scheduleSyncTask();
   }
 
   async evalContracts(): Promise<void> {

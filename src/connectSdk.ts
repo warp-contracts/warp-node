@@ -16,7 +16,7 @@ export async function connectSdk(
 ): Promise<Warp> {
   let sdk: Warp;
   if (testnet) {
-    sdk = WarpFactory.forTestnet();
+    sdk = WarpFactory.forTestnet(arweave);
   } else {
     sdk = WarpFactory.custom(arweave, {...defaultCacheOptions, dbLocation: cacheDir}, 'custom')
       .useWarpGateway(defaultWarpGwOptions.confirmationStatus, defaultWarpGwOptions.source)

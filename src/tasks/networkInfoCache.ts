@@ -2,7 +2,7 @@ import {NetworkInfoInterface} from "arweave/node/network";
 import {NodeContext} from "../init";
 import {TaskRunner} from "../components/TaskRunner";
 
-export const BLOCKS_INTERVAL_MS = 30 * 1000;
+export const BLOCKS_INTERVAL_MS = 10 * 1000;
 
 export let cachedNetworkInfo: NetworkInfoInterface | null = null;
 
@@ -11,7 +11,7 @@ export async function runNetworkInfoCacheTask(context: NodeContext) {
 
   async function updateNetworkInfo() {
     try {
-      cachedNetworkInfo = await arweaveWrapper.warpGwInfo();
+      cachedNetworkInfo = await arweaveWrapper.info();
       logger.debug("New network height", cachedNetworkInfo.height);
     } catch (e) {
       logger.error("Error while loading network info", e);

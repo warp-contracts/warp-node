@@ -3,9 +3,15 @@ module.exports = {
         {
             name: "en-1",
             script: "./dist/init.js",
-            args: "--port=3001 --testnet='false' --url='http://localhost' --networkId='all_pst' --networkContractId='Uzopk0UL58FU18DVkbZytA-rZ-X6J5Nm1ZQ8J3WOS0E'",
+            args: "--port=3001 --testnet='true' --url='http://localhost' --networkId='bundlr_network_testnet' --networkContractId='5LxYlcB8YwGNlRLC2uEbK40Usd6t8tmIxtba5jfb3xc'",
             kill_timeout : 3000
-        },
+        }/*,
+        {
+            name: "en-2",
+            script: "./dist/init.js",
+            args: "--port=3002 --testnet='true' --url='http://localhost' --networkId='bundlr_network_testnet' --networkContractId='5LxYlcB8YwGNlRLC2uEbK40Usd6t8tmIxtba5jfb3xc'",
+            kill_timeout : 3000
+        }*/
       /*  {
             name: "en-2",
             script: "./dist/init.js",
