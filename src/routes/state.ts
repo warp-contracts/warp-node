@@ -43,7 +43,7 @@ export const state = async (ctx: Router.RouterContext) => {
           evaluatedInteractions: Object.keys(cachedValue.validity).length,
           lastSortKey: sortKey,
           ...result,
-          state
+          state: cachedValue.state
         }
         if (showValidity) {
           response = {
@@ -58,7 +58,7 @@ export const state = async (ctx: Router.RouterContext) => {
       response = {
         evaluatedInteractions: Object.keys(cachedValue.validity).length,
         lastSortKey: sortKey,
-        state
+        state: cachedValue.state
       }
       if (showValidity) {
         response = {
