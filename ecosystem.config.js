@@ -3,13 +3,13 @@ module.exports = {
         {
             name: "en-1",
             script: "./dist/init.js",
-            args: "--port=3001 --testnet='false' --url='http://localhost' --networkId='all_pst' --networkContractId='qiu87_kT27m3d0LILj-AAaLfsQT6mHauOeZBJCMXutE'",
+            args: "--port=3001 --testnet='false' --url='http://localhost' --networkId='all_pst' --networkContractId='6EGqLVX6OAsqkra6-aJj0uKnrBVvWzmzmVFypPoTWi0'",
             kill_timeout : 3000
         },
         {
             name: "en-2",
             script: "./dist/init.js",
-            args: "--port=8080 --testnet='false' --url='http://localhost' --networkId='all_pst' --networkContractId='qiu87_kT27m3d0LILj-AAaLfsQT6mHauOeZBJCMXutE'",
+            args: "--port=8080 --testnet='false' --url='http://localhost' --networkId='all_pst' --networkContractId='6EGqLVX6OAsqkra6-aJj0uKnrBVvWzmzmVFypPoTWi0'",
             kill_timeout : 3000
         },
       /*  {

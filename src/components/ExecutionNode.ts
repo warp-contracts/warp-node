@@ -19,7 +19,7 @@ export type NodeData = {
   blacklisted?: boolean
 }
 
-const sdkOptions = {
+export const sdkOptions = {
   useFastCopy: true,
   useIVM: true,
   allowUnsafeClient: true
@@ -123,10 +123,10 @@ export class ExecutionNode {
             const lastSortKey = contractInteractions?.length ? contractInteractions[contractInteractions.length - 1].sortKey : null;
             this.logger.info(`Evaluating ${currentContract}(${contractInteractions.length} inputs, ${lastSortKey})`);
             try {
-              const {state} = await this.sdk.contract(currentContract)
+              const {cachedValue} = await this.sdk.contract(currentContract)
                 .setEvaluationOptions(sdkOptions)
                 .readState(undefined, undefined, contractInteractions);
-              await this.upsertBalances(state, currentContract);
+              await this.upsertBalances(cachedValue.state, currentContract);
             } catch (e) {
               this.logger.error(`Error while evaluating contract ${currentContract}`, e);
             } finally {
@@ -143,10 +143,10 @@ export class ExecutionNode {
           const lastSortKey = contractInteractions?.length ? contractInteractions[contractInteractions.length - 1].sortKey : null;
           this.logger.info(`Evaluating ${currentContract}(${contractInteractions.length} inputs, ${lastSortKey})`);
           try {
-            const {state} = await this.sdk.contract(currentContract)
+            const {cachedValue} = await this.sdk.contract(currentContract)
               .setEvaluationOptions(sdkOptions)
               .readState(undefined, undefined, contractInteractions);
-            await this.upsertBalances(state, currentContract);
+            await this.upsertBalances(cachedValue.state, currentContract);
           } catch (e) {
             this.logger.error(`Error while evaluating contract ${currentContract}`, e);
           } finally {
@@ -200,7 +200,7 @@ export class ExecutionNode {
   private async evalSingleContracts(): Promise<void> {
     this.logger.info("Evaluating single contracts");
     const contracts = cachedContracts!!;
-    const promises = contracts.map(c => {
+    const promises = contracts?.map(c => {
       this.sdk.contract(c.arweaveTxId)
         .setEvaluationOptions(sdkOptions)
         .readState();

@@ -1,5 +1,5 @@
 import Router from "@koa/router";
-import {NodeData} from "../components/ExecutionNode";
+import {NodeData, sdkOptions} from "../components/ExecutionNode";
 import {Contract} from "warp-contracts";
 import deepHash from "arweave/node/lib/deepHash";
 import Arweave from "arweave";
@@ -14,25 +14,20 @@ export type GossipQueryResult = {
 };
 
 export const gossipRoute = async (ctx: Router.RouterContext) => {
-  const height = parseInt(ctx.query.height as string);
   const type = ctx.query.type as string;
   const contractId = ctx.query.contractId as string;
-  const upToTransactionId = ctx.query.upToTransactionId as string;
+  const upToSortKey = ctx.query.upToSortKey as string;
 
   if (type === "query") {
     try {
-      const contract: Contract<any> = ctx.sdk.contract(contractId).setEvaluationOptions({
-        useFastCopy: true,
-        useVM2: true,
-        manualCacheFlush: true
-      });
-      const {state} = await contract.readState(upToTransactionId);
-      const stateHash = contract.stateHash(state);
+      const contract: Contract<any> = ctx.contractsSdk.contract(contractId).setEvaluationOptions(sdkOptions);
+      const {sortKey, cachedValue} = await contract.readState(upToSortKey);
+      const stateHash = contract.stateHash(cachedValue.state);
 
       const jwk = ctx.node.wallet;
       const owner = jwk.n;
 
-      const dataToSign = await getSigData(ctx.arweave, owner, stateHash, upToTransactionId, contractId);
+      const dataToSign = await getSigData(ctx.arweave, owner, stateHash, upToSortKey, contractId);
       const rawSig = await ctx.arweave.crypto.sign(jwk, dataToSign);
 
       ctx.body = {
@@ -53,10 +48,10 @@ export const gossipRoute = async (ctx: Router.RouterContext) => {
 
 export async function getSigData(
   arweave: Arweave,
-  owner: string, stateHash: string, transactionId: string, contractId: string) {
+  owner: string, stateHash: string, upToSortKey: string, contractId: string) {
   return await deepHash([
     arweave.utils.stringToBuffer(owner),
-    arweave.utils.stringToBuffer(transactionId),
+    arweave.utils.stringToBuffer(upToSortKey),
     arweave.utils.stringToBuffer(contractId),
     arweave.utils.stringToBuffer(stateHash)
   ]);

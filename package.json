@@ -25,7 +25,7 @@
     "promise-call-limit": "^1.0.1",
     "threads": "^1.7.0",
     "undici": "4.16.0",
-    "warp-contracts": "1.2.0-ivm.2",
+    "warp-contracts": "1.2.0-ivm.3",
     "yargs": "^17.3.1"
   },
   "devDependencies": {

@@ -2,16 +2,15 @@ import Router from "@koa/router";
 import {NetworkContractService} from "../components/NetworkContractService";
 import {cachedNetworkInfo} from "../tasks/networkInfoCache";
 import {Contract} from "warp-contracts";
+import {sdkOptions} from "../components/ExecutionNode";
 
 export const state = async (ctx: Router.RouterContext) => {
   const contractId = ctx.query.id as string;
   const showValidity = ctx.query.validity === 'true';
   const snowball = ctx.query.snowball !== 'false';
-  const safeHeight = ctx.query.safeHeight === 'true';
 
   const networkContract: NetworkContractService = ctx.networkContract;
 
-  // TODO: groups
   const contracts: any[] = (await networkContract.getContractsAndGroups(ctx.node.nodeData)).contracts;
   if (!contracts.some(c => c.arweaveTxId == contractId)
     && !(await ctx.contractsSdk.stateEvaluator.hasContractCached(contractId))) {
@@ -20,35 +19,17 @@ export const state = async (ctx: Router.RouterContext) => {
     return;
   }
 
-  // evaluate contract
-  if (!cachedNetworkInfo || !cachedNetworkInfo.height) {
-    throw new Error("Network info not available");
-  }
-  let height = cachedNetworkInfo.height;
-  if (safeHeight) {
-    height--;
-  }
-
-  ctx.logger.info("Requested height", height);
-
-  const contract: Contract<any> = ctx.contractsSdk.contract(contractId).setEvaluationOptions({
-    useFastCopy: true,
-    useVM2: true,
-    manualCacheFlush: true
-  });
-  const {state, validity} = await contract.readState(height);
-  const keys = Object.keys(validity);
-  const length = keys.length;
-  if (length == 0) {
+  const contract: Contract<any> = ctx.contractsSdk.contract(contractId).setEvaluationOptions(sdkOptions);
+  const {sortKey, cachedValue} = await contract.readState();
+  if (sortKey == null) {
     throw new Error("Contract has no registered interactions");
   }
-  const transactionId = keys[length - 1];
 
-  const hash = contract.stateHash(state);
+  const hash = contract.stateHash(cachedValue.state);
 
   ctx.logger.debug("Received", {
     id: contractId,
-    transactionId: transactionId,
+    sortKey,
     result: hash
   });
 
@@ -56,19 +37,18 @@ export const state = async (ctx: Router.RouterContext) => {
     let response;
 
     if (snowball) {
-      const result = await ctx.snowball.roll(ctx, contractId, height, hash, transactionId);
+      const result = await ctx.snowball.roll(ctx, contractId, hash, sortKey);
       if (result.preference == hash) {
         response = {
-          evaluatedInteractions: Object.keys(validity).length,
-          lastTransactionId: transactionId,
-          height: height,
+          evaluatedInteractions: Object.keys(cachedValue.validity).length,
+          lastSortKey: sortKey,
           ...result,
           state
         }
         if (showValidity) {
           response = {
             ...response,
-            validity
+            validity: cachedValue.validity
           }
         }
       } else {
@@ -76,15 +56,14 @@ export const state = async (ctx: Router.RouterContext) => {
       }
     } else {
       response = {
-        evaluatedInteractions: Object.keys(validity).length,
-        lastTransactionId: transactionId,
-        height: height,
+        evaluatedInteractions: Object.keys(cachedValue.validity).length,
+        lastSortKey: sortKey,
         state
       }
       if (showValidity) {
         response = {
           ...response,
-          validity
+          validity: cachedValue.validity
         }
       }
     }

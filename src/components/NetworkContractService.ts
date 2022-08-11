@@ -65,11 +65,11 @@ export class NetworkContractService {
   }
 
   async readState(): Promise<{ state: any, validity: any }> {
-    return await this.contract
+    return (await this.contract
       .setEvaluationOptions({
         useFastCopy: true,
       })
-      .readState();
+      .readState()).cachedValue;
   }
 
   private async writeInteraction(input: any): Promise<any> {

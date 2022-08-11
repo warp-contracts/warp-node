@@ -12,6 +12,7 @@ export type ConsensusParams = {
 }
 
 const MAX_PREFERENCE_CHANGES = 5;
+const MAX_ERRORS = 5;
 
 // https://docs.avax.network/learn/platform-overview/avalanche-consensus/#algorithm
 // https://ipfs.io/ipfs/QmUy4jh5mGNZvLkjies1RWM4YuvJh5o2FYopNPVYwrRVGV page 4., Figure 3.
@@ -21,9 +22,8 @@ export class Snowball {
   async roll(
     ctx: Router.RouterContext,
     contractId: string,
-    height: number,
     hash: string,
-    upToTransactionId: string): Promise<{ preference: string, rounds: GossipQueryResult[][] }> {
+    upToSortKey: string): Promise<{ preference: string, rounds: GossipQueryResult[][] }> {
 
     const consensusParams = cachedConsensusParams;
     if (consensusParams == null) {
@@ -32,9 +32,8 @@ export class Snowball {
     
     this.logger.info(`Starting snowball consensus on`, {
       contract: contractId,
-      height,
       hash,
-      upToTransactionId,
+      upToSortKey,
       params: consensusParams,
     });
 
@@ -56,6 +55,7 @@ export class Snowball {
     const rounds: GossipQueryResult[][] = [];
 
     let preferenceChanges = 0;
+    let errorsCount = 0;
 
     while (!decided) {
       // TODO: round-robin? weighted round-robin based on nodes reputation?
@@ -72,10 +72,13 @@ export class Snowball {
       );
 
       const peersQuery: Promise<Response>[] =
-        randomPeers.map((peer) => fetch(`${peer.address}/gossip?type=query&contractId=${contractId}&height=${height}&upToTransactionId=${upToTransactionId}`));
+        randomPeers.map((peer) => fetch(`${peer.address}/gossip?type=query&contractId=${contractId}&upToSortKey=${upToSortKey}`));
 
       const peersQueryResult = await Promise.allSettled(peersQuery);
       for (const result of peersQueryResult) {
+        if (errorsCount > MAX_ERRORS) {
+          throw new Error('Too many errors during consensus, exiting.');
+        }
         if (result.status == "fulfilled") {
           const res = (result as PromiseFulfilledResult<Response>).value
           if (res.ok) {
@@ -83,7 +86,7 @@ export class Snowball {
 
             const verifyResult = await ctx.arweave.crypto.verify(
               data.signature.owner,
-              await getSigData(ctx.arweave, data.signature.owner, data.hash, upToTransactionId, contractId),
+              await getSigData(ctx.arweave, data.signature.owner, data.hash, upToSortKey, contractId),
               ctx.arweave.utils.b64UrlToBuffer(data.signature.sig)
             );
             if (verifyResult) {
@@ -96,10 +99,12 @@ export class Snowball {
 
           } else {
             this.logger.error(res.statusText);
+            errorsCount++;
           }
 
         } else {
           this.logger.error(result.reason);
+          errorsCount++;
         }
       }
 
