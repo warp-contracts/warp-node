@@ -1,5 +1,5 @@
-# RedStone Distributed Execution Network
-RedStone DEN is a network of nodes that performs an execution of registered SmartWeave contracts.
+# Warp Distributed Execution Network
+Warp DEN is a network of nodes that performs an execution of registered SmartWeave contracts.
 The consensus between the nodes is achieved via [Snowball Loop algorithm](https://ipfs.io/ipfs/QmUy4jh5mGNZvLkjies1RWM4YuvJh5o2FYopNPVYwrRVGV) (page 4., Figure 3.).
 
 - [Installation](#installation)
