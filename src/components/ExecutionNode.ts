@@ -2,8 +2,8 @@ import {JWKInterface} from "arweave/node/lib/wallet";
 import {NetworkContractService} from "./NetworkContractService";
 import Arweave from "arweave";
 import {cachedContractGroups, cachedContracts} from "../tasks/contractsCache";
-import {LoggerFactory, Warp, WARP_GW_URL} from "warp-contracts";
-import {knex, Knex} from "knex";
+import {EvalStateResult, LoggerFactory, Warp, WARP_GW_URL} from "warp-contracts";
+import {Knex} from "knex";
 
 export type NodeData = {
   nodeId: string,
@@ -29,15 +29,12 @@ export class ExecutionNode {
   private readonly logger = LoggerFactory.INST.create('ExecutionNode');
   private evaluating = false;
 
-  /*private readonly pool = Pool(() => spawn(new Worker("./workers/contractWorker")),
-    os.cpus().length * 2);*/
-
   constructor(
     private readonly _nodeData: NodeData,
     private readonly sdk: Warp,
     private readonly networkService: NetworkContractService,
     private readonly arweave: Arweave,
-    private readonly balancesDb: Knex
+    private readonly nodeDb: Knex
   ) {
     this.logger.info('🚀🚀🚀 Starting execution node with params:', {..._nodeData, wallet: ''});
     this.evalContracts = this.evalContracts.bind(this);
@@ -79,20 +76,27 @@ export class ExecutionNode {
 
   private async evaluateContractGroup(contractGroup: string): Promise<void> {
     const url = `${WARP_GW_URL}/gateway/interactions-contract-groups`;
+    // const url = `http://localhost:5666/gateway/interactions-contract-groups`;
 
     let page = 0;
     let limit = 0;
     let items = 0;
 
     const sortKey = await this.sdk.stateEvaluator.lastCachedSortKey();
-    this.logger.info(`Loading from sort key: ${sortKey}`);
+    let lastEmptyContractBlockHeight = parseInt((await this.loadLastEmptyContractBlockHeight()).value);
+    if (!lastEmptyContractBlockHeight) {
+      lastEmptyContractBlockHeight = 1;
+    }
+    this.logger.info(`Loading from sort key: ${sortKey}, empty contract block height ${lastEmptyContractBlockHeight}`);
 
+    // FIXME: this code works, but is kinda shitty and needs some refactoring ;-)
     do {
       const response = await fetch(
         `${url}?${new URLSearchParams({
           group: contractGroup,
           limit: "10000",
           page: (++page).toString(),
+          fromBlockHeight: lastEmptyContractBlockHeight.toString(),
           ...(sortKey ? {fromSortKey: sortKey} : ''),
         })}`
       )
@@ -117,22 +121,59 @@ export class ExecutionNode {
         let currentContract = interactions[0].contractId.trim();
         for (let interaction of interactions) {
           const contract = interaction.contractId.trim();
-          if (contract.localeCompare(currentContract) == 0) {
-            contractInteractions.push(interaction);
-          } else {
-            const lastSortKey = contractInteractions?.length ? contractInteractions[contractInteractions.length - 1].sortKey : null;
-            this.logger.info(`Evaluating ${currentContract}(${contractInteractions.length} inputs, ${lastSortKey})`);
+          if (!interaction.sortKey) {
+            // evaluating leftovers
+            // TODO: c-p
+            if (contractInteractions?.length) {
+              const lastSortKey = contractInteractions?.length ? contractInteractions[contractInteractions.length - 1].sortKey : null;
+              this.logger.info(`Evaluating ${currentContract}(${contractInteractions.length} inputs, ${lastSortKey})`);
+              try {
+                const {sortKey, cachedValue} = await this.sdk.contract(currentContract)
+                  .setEvaluationOptions(sdkOptions)
+                  .readState(undefined, undefined, contractInteractions);
+                await this.upsertBalances(cachedValue.state, currentContract);
+                await this.upsertState(currentContract, sortKey, cachedValue);
+              } catch (e) {
+                this.logger.error(`Error while evaluating contract ${currentContract}`, e);
+              } finally {
+                contractInteractions = [];
+              }
+            }
+
+            // (o) contract without any interactions
+            currentContract = contract;
+            this.logger.info(`Evaluating empty contract ${currentContract}: ${interaction.contractCreation}`);
             try {
-              const {cachedValue} = await this.sdk.contract(currentContract)
+              const {cachedValue, sortKey} = await this.sdk.contract(currentContract)
                 .setEvaluationOptions(sdkOptions)
-                .readState(undefined, undefined, contractInteractions);
+                .readState(undefined, undefined, []);
               await this.upsertBalances(cachedValue.state, currentContract);
+              await this.upsertState(currentContract, sortKey, cachedValue);
             } catch (e) {
               this.logger.error(`Error while evaluating contract ${currentContract}`, e);
             } finally {
-              currentContract = contract;
-              contractInteractions = [];
+              await this.updateLastEvaluatedEmptyContractBlockHeight(interaction.contractCreation);
+            }
+          } else {
+            // (o) contract with interactions
+            if (contract.localeCompare(currentContract) == 0) {
               contractInteractions.push(interaction);
+            } else {
+              const lastSortKey = contractInteractions?.length ? contractInteractions[contractInteractions.length - 1].sortKey : null;
+              this.logger.info(`Evaluating ${currentContract}(${contractInteractions.length} inputs, ${lastSortKey})`);
+              try {
+                const {sortKey, cachedValue} = await this.sdk.contract(currentContract)
+                  .setEvaluationOptions(sdkOptions)
+                  .readState(undefined, undefined, contractInteractions);
+                await this.upsertBalances(cachedValue.state, currentContract);
+                await this.upsertState(currentContract, sortKey, cachedValue);
+              } catch (e) {
+                this.logger.error(`Error while evaluating contract ${currentContract}`, e);
+              } finally {
+                currentContract = contract;
+                contractInteractions = [];
+                contractInteractions.push(interaction);
+              }
             }
           }
         }
@@ -143,10 +184,11 @@ export class ExecutionNode {
           const lastSortKey = contractInteractions?.length ? contractInteractions[contractInteractions.length - 1].sortKey : null;
           this.logger.info(`Evaluating ${currentContract}(${contractInteractions.length} inputs, ${lastSortKey})`);
           try {
-            const {cachedValue} = await this.sdk.contract(currentContract)
+            const {sortKey, cachedValue} = await this.sdk.contract(currentContract)
               .setEvaluationOptions(sdkOptions)
               .readState(undefined, undefined, contractInteractions);
             await this.upsertBalances(cachedValue.state, currentContract);
+            await this.upsertState(currentContract, sortKey, cachedValue);
           } catch (e) {
             this.logger.error(`Error while evaluating contract ${currentContract}`, e);
           } finally {
@@ -160,7 +202,7 @@ export class ExecutionNode {
 
   }
 
-  private async upsertBalances(state:any, contractTxId: string) {
+  private async upsertBalances(state: any, contractTxId: string) {
     const balances = state.balances;
     const ticker = state.ticker;
     const name = state.name;
@@ -181,7 +223,7 @@ export class ExecutionNode {
       });
       // sqlite explodes when trying to put too big batch insert
       if (inserts.length == 50) {
-        await this.balancesDb('balances')
+        await this.nodeDb('balances')
           .insert(inserts)
           .onConflict(['wallet_address', 'contract_tx_id'])
           .merge();
@@ -189,7 +231,7 @@ export class ExecutionNode {
       }
     }
     if (inserts.length) {
-      await this.balancesDb('balances')
+      await this.nodeDb('balances')
         .insert(inserts)
         .onConflict(['wallet_address', 'contract_tx_id'])
         .merge();
@@ -245,5 +287,31 @@ export class ExecutionNode {
 
   get wallet(): JWKInterface {
     return this._nodeData.wallet;
+  }
+
+  private async upsertState(currentContract: any, sortKey: string, cachedValue: EvalStateResult<unknown>) {
+    await this.nodeDb('states')
+      .insert({
+        'contract_tx_id': currentContract.trim(),
+        'sort_key': sortKey,
+        'state': cachedValue.state,
+        'validity': cachedValue.validity,
+        'error_messages': cachedValue.errorMessages
+      })
+      .onConflict(['contract_tx_id'])
+      .merge();
+  }
+
+  private async loadLastEmptyContractBlockHeight() {
+    return this.nodeDb('node_settings')
+      .where({'key': 'last_empty_contract_block_height'})
+      .select('value')
+      .first();
+  }
+
+  private async updateLastEvaluatedEmptyContractBlockHeight(contractCreation: number) {
+    await this.nodeDb('node_settings')
+      .where({'key': 'last_empty_contract_block_height'})
+      .update({'value': contractCreation.toString()});
   }
 }

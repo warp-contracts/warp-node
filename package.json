@@ -1,9 +1,9 @@
 {
-  "name": "warp-sw-node",
-  "version": "1.0.9",
+  "name": "warp-node",
+  "version": "1.0.10",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/init.js --port=8080 --testnet='false' --url='http://localhost' --networkId='all_pst' --networkContractId='qiu87_kT27m3d0LILj-AAaLfsQT6mHauOeZBJCMXutE'",
+    "start": "node dist/init.js --port=8080 --testnet='false' --url='http://localhost' --networkId='atomic_nfts_local' --networkContractId='Pjcq15yyasSF3hgf6nJ3xvEjt9zNmc4NXu09Zoa0X1A'",
     "format": "prettier --write ."
   },
   "license": "MIT",
@@ -25,7 +25,7 @@
     "promise-call-limit": "^1.0.1",
     "threads": "^1.7.0",
     "undici": "4.16.0",
-    "warp-contracts": "1.2.0-ivm.3",
+    "warp-contracts": "1.2.0-ivm.5",
     "yargs": "^17.3.1"
   },
   "devDependencies": {

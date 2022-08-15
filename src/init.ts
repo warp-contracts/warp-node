@@ -19,8 +19,8 @@ import {runNetworkInfoCacheTask} from "./tasks/networkInfoCache";
 import {runOtherPeersTask} from "./tasks/otherPeersCache";
 import {runConsensusParamsTask} from "./tasks/consensusParamsCache";
 import {runContractsTask} from "./tasks/contractsCache";
-import {createBalancesDbTables} from "./balancesDb";
 import {Knex} from "knex";
+import {createNodeDbTables} from "./nodeDb";
 
 require("dotenv").config();
 
@@ -39,7 +39,7 @@ export interface NodeContext {
   testnet: boolean;
   snowball: Snowball;
   arweaveWrapper: ArweaveWrapper;
-  balancesDb: Knex;
+  nodeDb: Knex;
 }
 
 const argv = yargs(hideBin(process.argv)).parseSync();
@@ -54,7 +54,7 @@ const argv = yargs(hideBin(process.argv)).parseSync();
 
   const denContractCachePath = path.join(__dirname, 'den-data',port.toString(), 'cache', 'den');
   const contractsCachePath = path.join(__dirname, 'den-data', port.toString(), 'cache', 'contracts');
-  const balancesDbPath = path.join(__dirname, port.toString(), 'balancesDb');
+  const nodeDbPath = path.join(__dirname, 'den-data', port.toString(), 'nodeDb');
   const arweave = initArweave(testnet);
   const wallet = readWallet();
   const jwkAddress = await arweave.wallets.getAddress(wallet);
@@ -90,22 +90,22 @@ const argv = yargs(hideBin(process.argv)).parseSync();
   if (!fs.existsSync(contractsCachePath)) {
     fs.mkdirSync(contractsCachePath, {recursive: true});
   }
-  if (!fs.existsSync(balancesDbPath)) {
-    fs.mkdirSync(balancesDbPath, {recursive: true});
+  if (!fs.existsSync(nodeDbPath)) {
+    fs.mkdirSync(nodeDbPath, {recursive: true});
   }
 
   const denSdk = await connectSdk(arweave, denContractCachePath, testnet);
   const contractsSdk = await connectSdk(arweave, contractsCachePath, testnet);
   const denContract = denSdk.contract<any>(networkContractId).connect(wallet);
 
-  const balancesDb = knex({
+  const nodeDb = knex({
     client: 'better-sqlite3',
     connection: {
-      filename: `${balancesDbPath}/balances.sqlite`
+      filename: `${nodeDbPath}/node.sqlite`
     },
     useNullAsDefault: true
   });
-  await createBalancesDbTables(balancesDb);
+  await createNodeDbTables(nodeDb);
 
   const networkContract = new NetworkContractService(denContract, denSdk, testnet);
   const nodeData = {
@@ -120,7 +120,7 @@ const argv = yargs(hideBin(process.argv)).parseSync();
     networkContractId,
     wallet
   };
-  const node = new ExecutionNode(nodeData, contractsSdk, networkContract, arweave, balancesDb);
+  const node = new ExecutionNode(nodeData, contractsSdk, networkContract, arweave, nodeDb);
   const snowball = new Snowball();
 
   const app = new Koa<Application.DefaultState, NodeContext>();
@@ -132,7 +132,7 @@ const argv = yargs(hideBin(process.argv)).parseSync();
   app.context.networkContract = networkContract;
   app.context.snowball = snowball;
   app.context.arweaveWrapper = new ArweaveWrapper(arweave);
-  app.context.balancesDb = balancesDb;
+  app.context.nodeDb = nodeDb;
 
   app.use(cors({
     async origin() {

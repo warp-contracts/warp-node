@@ -3121,10 +3121,10 @@ vary@^1.1.2:
   resolved "https://registry.yarnpkg.com/vary/-/vary-1.1.2.tgz#2299f02c6ded30d4a5961b0b9f74524a18f634fc"
   integrity sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==
 
-warp-contracts@1.2.0-ivm.3:
-  version "1.2.0-ivm.3"
-  resolved "https://registry.yarnpkg.com/warp-contracts/-/warp-contracts-1.2.0-ivm.3.tgz#803fa27ce796d6e268492579d0b38922d5de1909"
-  integrity sha512-nFZIR/9omR4Mybe65doDA3q5usz/IsoNhPD4EwHSgkJpAixJbW27xt8hMn2/4ordTzfWoTjKlkWN88IEXkL4cw==
+warp-contracts@1.2.0-ivm.5:
+  version "1.2.0-ivm.5"
+  resolved "https://registry.yarnpkg.com/warp-contracts/-/warp-contracts-1.2.0-ivm.5.tgz#6b01a34bdc2f58dc2dbb57d0ecad4a9b8afb75fe"
+  integrity sha512-r04AxhRH89bfsnLz58hpDgKGsH24TCvo/FJm7g9A2nCJhwC7ia87WScpCaNa0P+hZ8GxRu9ejamRUuIXGP1uoQ==
   dependencies:
     "@assemblyscript/loader" "^0.19.23"
     "@idena/vrf-js" "^1.0.1"
