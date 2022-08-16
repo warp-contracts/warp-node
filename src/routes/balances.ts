@@ -6,7 +6,7 @@ export const walletBalances = async (ctx: Router.RouterContext) => {
 
   try {
     const result = await nodeDb.raw(`
-        SELECT contract_tx_id, token_ticker, token_name, balance
+        SELECT contract_tx_id, token_ticker, token_name, balance, sort_key
         FROM balances
         WHERE wallet_address = ?
     `, [walletAddress])
