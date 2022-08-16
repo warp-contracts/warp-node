@@ -1,8 +1,8 @@
 import Router from "@koa/router";
 import {NetworkContractService} from "../components/NetworkContractService";
-import {cachedNetworkInfo} from "../tasks/networkInfoCache";
 import {Contract} from "warp-contracts";
 import {sdkOptions} from "../components/ExecutionNode";
+import {getSigData} from "./gossip";
 
 export const state = async (ctx: Router.RouterContext) => {
   const contractId = ctx.query.id as string;
@@ -33,6 +33,17 @@ export const state = async (ctx: Router.RouterContext) => {
     result: hash
   });
 
+  const jwk = ctx.node.wallet;
+  const owner = jwk.n;
+
+  const dataToSign = await getSigData(ctx.arweave, owner, hash, sortKey, contractId);
+  const rawSig = await ctx.arweave.crypto.sign(jwk, dataToSign);
+
+  const signature = {
+    owner: jwk.n,
+    sig: ctx.arweave.utils.bufferTob64Url(rawSig),
+  }
+
   try {
     let response;
 
@@ -43,7 +54,8 @@ export const state = async (ctx: Router.RouterContext) => {
           evaluatedInteractions: Object.keys(cachedValue.validity).length,
           lastSortKey: sortKey,
           ...result,
-          state: cachedValue.state
+          state: cachedValue.state,
+          signature
         }
         if (showValidity) {
           response = {
@@ -52,13 +64,17 @@ export const state = async (ctx: Router.RouterContext) => {
           }
         }
       } else {
-        response = result;
+        response = {
+          ...result,
+          signature
+        };
       }
     } else {
       response = {
         evaluatedInteractions: Object.keys(cachedValue.validity).length,
         lastSortKey: sortKey,
-        state: cachedValue.state
+        state: cachedValue.state,
+        signature
       }
       if (showValidity) {
         response = {

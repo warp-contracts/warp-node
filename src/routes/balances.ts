@@ -2,10 +2,10 @@ import Router from "@koa/router";
 
 export const walletBalances = async (ctx: Router.RouterContext) => {
   const walletAddress = ctx.query.walletAddress as string;
-  const balancesDb = ctx.balancesDb;
+  const nodeDb = ctx.nodeDb;
 
   try {
-    const result = await balancesDb.raw(`
+    const result = await nodeDb.raw(`
         SELECT contract_tx_id, token_ticker, token_name, balance
         FROM balances
         WHERE wallet_address = ?

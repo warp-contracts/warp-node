@@ -7,6 +7,7 @@ export async function createNodeDbTables(knex: Knex) {
       t.string('wallet_address').index();
       t.string('contract_tx_id').index();
       t.string('token_ticker').index();
+      t.string('sort_key').index();
       t.string('token_name');
       t.string('balance');
       t.unique(['wallet_address', 'contract_tx_id'])
