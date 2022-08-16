@@ -13,6 +13,7 @@ import {
   WARP_GW_URL
 } from "warp-contracts";
 import {Knex} from "knex";
+import {cachedNetworkInfo} from "../tasks/networkInfoCache";
 
 export type NodeData = {
   nodeId: string,
@@ -98,7 +99,9 @@ export class ExecutionNode {
     if (!lastEmptyContractBlockHeight) {
       lastEmptyContractBlockHeight = 1;
     }
-    this.logger.info(`Loading from sort key: ${sortKey}, empty contract block height ${lastEmptyContractBlockHeight}`);
+    const currentNetworkHeight = cachedNetworkInfo?.height!!;
+
+    this.logger.info(`Loading from sort key: ${sortKey}, empty contract block height ${lastEmptyContractBlockHeight}, current network height: ${currentNetworkHeight}`);
 
     // FIXME: this code works, but is kinda shitty and needs some refactoring ;-)
     do {
@@ -173,7 +176,17 @@ export class ExecutionNode {
             } catch (e) {
               this.logger.error(`Error while evaluating contract ${currentContract}`, e);
             } finally {
-              await this.updateLastEvaluatedEmptyContractBlockHeight(interaction.contractCreation);
+              let lastBlockHeightToStore = interaction.contractCreation;
+              if (items < limit
+                && interactions.indexOf(interaction) == interactions.length - 1
+                && interaction.contractCreation < currentNetworkHeight) {
+                // if it is last empty contract currently returned by the gateway
+                // AND its creation block height is lower than current network height
+                // - add +1 to stored value - so that we will not re-evaluate the
+                // same contracts over and over again
+                lastBlockHeightToStore++;
+              }
+              await this.updateLastEvaluatedEmptyContractBlockHeight(lastBlockHeightToStore);
             }
           } else {
             // (o) contract with interactions
@@ -297,7 +310,7 @@ export class ExecutionNode {
           node.evaluating = false;
         }
         workerLoop();
-      }, 10000);
+      }, 60000);
     })();
   }
 
