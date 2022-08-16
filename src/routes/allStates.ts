@@ -7,11 +7,10 @@ const allowedOrders = ['asc', 'desc'];
 
 export const allStates = async (ctx: Router.RouterContext) => {
 
-  const { page, limit, validity, errors, orderBy, order } = ctx.query;
+  const {page, limit, validity, errors, orderBy, order, groups} = ctx.query;
 
   const nodeDb = ctx.nodeDb;
 
-  const parsedPage = page ? parseInt(page as string) : 1;
   if (allowedOrderingColumns.indexOf(orderBy as string) == -1) {
     ctx.body = `Wrong order column, allowed ${allowedOrderingColumns}`;
     ctx.status = 500;
@@ -23,6 +22,7 @@ export const allStates = async (ctx: Router.RouterContext) => {
     return;
   }
 
+  const parsedPage = page ? parseInt(page as string) : 1;
   const parsedLimit = limit
     ? Math.min(parseInt(limit as string), MAX_STATES_PER_PAGE)
     : MAX_STATES_PER_PAGE;
@@ -31,17 +31,24 @@ export const allStates = async (ctx: Router.RouterContext) => {
   const shouldReturnValidity = validity === 'true';
   const shouldReturnErrors = errors === 'true';
 
+  const parsedGroups = groups ? (groups as string).split(',') : null;
+
   const bindings: any[] = [];
   bindings.push(parsedLimit);
   bindings.push(offset);
 
   try {
     const result = await nodeDb.raw(`
-        SELECT contract_tx_id, sort_key, state
-            ${shouldReturnValidity ? ',validity' : ''}
-            ${shouldReturnErrors ? ',error_messages' : ''}
-        FROM states
-        ORDER BY ${orderBy == `contract_tx_id`  ? `contract_tx_id ${order}` : `sort_key ${order}, contract_tx_id ${order}`}
+        SELECT contract_tx_id,
+               src_tx_id,
+               sort_key,
+               state
+                   ${shouldReturnValidity ? ',validity' : ''}
+                       ${shouldReturnErrors ? ',error_messages' : ''}
+        FROM states ${parsedGroups
+                ? ` WHERE src_tx_id IN (${parsedGroups.map((group) => `'${group}'`).join(', ')})`
+                : ''}
+        ORDER BY ${orderBy == `contract_tx_id` ? `contract_tx_id ${order}` : `sort_key ${order}, contract_tx_id ${order}`}
         LIMIT ? OFFSET ?
     `, bindings)
 

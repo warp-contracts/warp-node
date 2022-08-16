@@ -6,6 +6,7 @@ export async function createNodeDbTables(knex: Knex) {
     await knex.schema.createTable('balances', function(t) {
       t.string('wallet_address').index();
       t.string('contract_tx_id').index();
+      t.string('src_tx_id').index();
       t.string('token_ticker').index();
       t.string('sort_key').index();
       t.string('token_name');
@@ -18,6 +19,7 @@ export async function createNodeDbTables(knex: Knex) {
   if (!hasStatesTable) {
     await knex.schema.createTable('states', function(t) {
       t.string('contract_tx_id').index().unique();
+      t.string('src_tx_id').index();
       t.string('sort_key').index();
       t.jsonb('state');
       t.jsonb('validity');

@@ -78,15 +78,13 @@ export class ExecutionNode {
     this.logger.info(`💻 Evaluating contracts state`);
     const contractGroups = cachedContractGroups!!;
 
-    for (const contractGroup of contractGroups) {
-      this.logger.info(`💻 Loading interactions for group ${contractGroup}`);
-      await this.evaluateContractGroup(contractGroup);
-    }
+    this.logger.info(`💻 Loading interactions for group ${contractGroups}`);
+    await this.evaluateContractGroups(contractGroups);
 
     await this.evalSingleContracts();
   }
 
-  private async evaluateContractGroup(contractGroup: string): Promise<void> {
+  private async evaluateContractGroups(contractGroups: string[]): Promise<void> {
     const url = `${WARP_GW_URL}/gateway/interactions-contract-groups`;
     // const url = `http://localhost:5666/gateway/interactions-contract-groups`;
 
@@ -107,7 +105,7 @@ export class ExecutionNode {
     do {
       const response = await fetch(
         `${url}?${new URLSearchParams({
-          group: contractGroup,
+          group: contractGroups.join(','),
           page: (++page).toString(),
           fromBlockHeight: lastEmptyContractBlockHeight.toString(),
           ...(sortKey ? {fromSortKey: sortKey} : ''),
@@ -134,6 +132,7 @@ export class ExecutionNode {
         let currentContract = interactions[0].contractId.trim();
         for (let interaction of interactions) {
           const contract = interaction.contractId.trim();
+          const contractSrcId = interaction.contractSourceId.trim();
           if (!interaction.sortKey) {
             // evaluating leftovers
             // TODO: c-p
@@ -144,8 +143,8 @@ export class ExecutionNode {
                 const {sortKey, cachedValue} = await this.sdk.contract(currentContract)
                   .setEvaluationOptions(sdkOptions)
                   .readState(undefined, undefined, contractInteractions);
-                await this.upsertBalances(cachedValue.state, currentContract, sortKey);
-                await this.upsertState(currentContract, sortKey, cachedValue);
+                await this.upsertBalances(cachedValue.state, currentContract, sortKey, contractSrcId);
+                await this.upsertState(currentContract, sortKey, cachedValue, contractSrcId);
               } catch (e) {
                 this.logger.error(`Error while evaluating contract ${currentContract}`, e);
               } finally {
@@ -171,8 +170,8 @@ export class ExecutionNode {
                 } as GQLNodeInterface,
                 valueToCache
               );
-              await this.upsertBalances(initState, currentContract, sortKey);
-              await this.upsertState(currentContract, sortKey, valueToCache);
+              await this.upsertBalances(initState, currentContract, sortKey, contractSrcId);
+              await this.upsertState(currentContract, sortKey, valueToCache, contractSrcId);
             } catch (e) {
               this.logger.error(`Error while evaluating contract ${currentContract}`, e);
             } finally {
@@ -200,8 +199,8 @@ export class ExecutionNode {
                 const {sortKey, cachedValue} = await this.sdk.contract(currentContract)
                   .setEvaluationOptions(sdkOptions)
                   .readState(undefined, undefined, contractInteractions);
-                await this.upsertBalances(cachedValue.state, currentContract, sortKey);
-                await this.upsertState(currentContract, sortKey, cachedValue);
+                await this.upsertBalances(cachedValue.state, currentContract, sortKey, contractSrcId);
+                await this.upsertState(currentContract, sortKey, cachedValue, contractSrcId);
               } catch (e) {
                 this.logger.error(`Error while evaluating contract ${currentContract}`, e);
               } finally {
@@ -216,14 +215,15 @@ export class ExecutionNode {
         // evaluating leftovers
         // TODO: c-p
         if (contractInteractions?.length) {
+          const contractSrcId = contractInteractions[0].contractSourceId.trim();
           const lastSortKey = contractInteractions?.length ? contractInteractions[contractInteractions.length - 1].sortKey : null;
           this.logger.info(`Evaluating ${currentContract}(${contractInteractions.length} inputs, ${lastSortKey})`);
           try {
             const {sortKey, cachedValue} = await this.sdk.contract(currentContract)
               .setEvaluationOptions(sdkOptions)
               .readState(undefined, undefined, contractInteractions);
-            await this.upsertBalances(cachedValue.state, currentContract, sortKey);
-            await this.upsertState(currentContract, sortKey, cachedValue);
+            await this.upsertBalances(cachedValue.state, currentContract, sortKey, contractSrcId);
+            await this.upsertState(currentContract, sortKey, cachedValue, contractSrcId);
           } catch (e) {
             this.logger.error(`Error while evaluating contract ${currentContract}`, e);
           } finally {
@@ -237,7 +237,7 @@ export class ExecutionNode {
 
   }
 
-  private async upsertBalances(state: any, contractTxId: string, sortKey: string) {
+  private async upsertBalances(state: any, contractTxId: string, sortKey: string, srcTxId: string) {
     const balances = state.balances;
     const ticker = state.ticker;
     const name = state.name;
@@ -252,6 +252,7 @@ export class ExecutionNode {
       inserts.push({
         'wallet_address': walletAddress.trim(),
         'contract_tx_id': contractTxId.trim(),
+        'src_tx_id': srcTxId,
         'token_ticker': ticker.trim(),
         'token_name': name?.trim(),
         'balance': balances[walletAddress].toString(),
@@ -278,6 +279,9 @@ export class ExecutionNode {
   private async evalSingleContracts(): Promise<void> {
     this.logger.info("Evaluating single contracts");
     const contracts = cachedContracts!!;
+    if (!contracts?.length) {
+      return;
+    }
     const promises = contracts?.map(c => {
       this.sdk.contract(c.arweaveTxId)
         .setEvaluationOptions(sdkOptions)
@@ -325,10 +329,11 @@ export class ExecutionNode {
     return this._nodeData.wallet;
   }
 
-  private async upsertState(currentContract: any, sortKey: string, cachedValue: EvalStateResult<unknown>) {
+  private async upsertState(currentContract: any, sortKey: string, cachedValue: EvalStateResult<unknown>, srcTxId: string) {
     await this.nodeDb('states')
       .insert({
         'contract_tx_id': currentContract.trim(),
+        'src_tx_id': srcTxId,
         'sort_key': sortKey,
         'state': cachedValue.state,
         'validity': cachedValue.validity,
