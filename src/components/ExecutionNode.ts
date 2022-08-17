@@ -239,10 +239,11 @@ export class ExecutionNode {
 
   private async upsertBalances(state: any, contractTxId: string, sortKey: string, srcTxId: string) {
     const balances = state.balances;
-    const ticker = state.ticker;
+    const ticker = state.ticker; // pst standard
+    const symbol = state.symbol; // warp nft/erc standard
     const name = state.name;
 
-    if (!balances || !ticker) {
+    if (!balances || (!ticker && !symbol)) {
       this.logger.error(`Contract ${contractTxId} is not compatible with token standard`);
       return;
     }
@@ -253,7 +254,7 @@ export class ExecutionNode {
         'wallet_address': walletAddress.trim(),
         'contract_tx_id': contractTxId.trim(),
         'src_tx_id': srcTxId,
-        'token_ticker': ticker.trim(),
+        'token_ticker': ticker ? ticker.trim() : symbol.trim(),
         'token_name': name?.trim(),
         'balance': balances[walletAddress].toString(),
         'sort_key': sortKey
