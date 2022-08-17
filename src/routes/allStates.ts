@@ -2,7 +2,7 @@ import Router from "@koa/router";
 
 const MAX_STATES_PER_PAGE = 1000;
 
-const allowedOrderingColumns = ['contract_tx_id', 'sort_key'];
+const allowedOrderingColumns = ['contract_tx_id', 'sort_key', 'contract_creation'];
 const allowedOrders = ['asc', 'desc'];
 
 export const allStates = async (ctx: Router.RouterContext) => {
@@ -37,10 +37,20 @@ export const allStates = async (ctx: Router.RouterContext) => {
   bindings.push(parsedLimit);
   bindings.push(offset);
 
+  let parsedOrderBy = null;
+  if (orderBy == 'contract_tx_id') {
+    parsedOrderBy = `contract_tx_id ${order}`;
+  } else if (orderBy == 'sort_key') {
+    parsedOrderBy = `sort_key ${order}, contract_tx_id ${order}`;
+  } else if (orderBy == 'contract_creation') {
+    parsedOrderBy = `contract_creation ${order}, contract_tx_id ${order}`;
+  }
+
   try {
     const result = await nodeDb.raw(`
         SELECT contract_tx_id,
                src_tx_id,
+               contract_creation,
                sort_key,
                state
                    ${shouldReturnValidity ? ',validity' : ''}
@@ -48,7 +58,7 @@ export const allStates = async (ctx: Router.RouterContext) => {
         FROM states ${parsedGroups
                 ? ` WHERE src_tx_id IN (${parsedGroups.map((group) => `'${group}'`).join(', ')})`
                 : ''}
-        ORDER BY ${orderBy == `contract_tx_id` ? `contract_tx_id ${order}` : `sort_key ${order}, contract_tx_id ${order}`}
+        ORDER BY ${parsedOrderBy}
         LIMIT ? OFFSET ?
     `, bindings)
 

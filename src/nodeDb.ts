@@ -9,6 +9,7 @@ export async function createNodeDbTables(knex: Knex) {
       t.string('src_tx_id').index();
       t.string('token_ticker').index();
       t.string('sort_key').index();
+      t.integer('contract_creation').index();
       t.string('token_name');
       t.string('balance');
       t.unique(['wallet_address', 'contract_tx_id'])
@@ -21,6 +22,7 @@ export async function createNodeDbTables(knex: Knex) {
       t.string('contract_tx_id').index().unique();
       t.string('src_tx_id').index();
       t.string('sort_key').index();
+      t.integer('contract_creation').index();
       t.jsonb('state');
       t.jsonb('validity');
       t.jsonb('error_messages');
