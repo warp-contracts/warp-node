@@ -219,7 +219,7 @@ export class ExecutionNode {
         // TODO: c-p
         if (contractInteractions?.length) {
           const contractSrcId = contractInteractions[0].contractSourceId.trim();
-          const contractCreation = contractInteractions[0].contractCreation.trim();
+          const contractCreation = contractInteractions[0].contractCreation;
           const lastSortKey = contractInteractions[contractInteractions.length - 1].sortKey;
           this.logger.info(`Evaluating ${currentContract}(${contractInteractions.length} inputs, ${lastSortKey})`);
           try {
