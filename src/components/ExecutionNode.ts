@@ -315,7 +315,7 @@ export class ExecutionNode {
           node.evaluating = false;
         }
         workerLoop();
-      }, 60000);
+      }, 5000);
     })();
   }
 

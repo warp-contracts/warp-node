@@ -4,7 +4,7 @@ const MAX_BALANCES_PER_PAGE = 1000;
 
 export const walletBalances = async (ctx: Router.RouterContext) => {
   const {page, limit, walletAddress, groups} = ctx.query;
-  const parsedGroups = ctx.query.groups ? (ctx.query.groups as string).split(',') : null;
+  const parsedGroups = groups ? (groups as string).split(',') : null;
   const nodeDb = ctx.nodeDb;
 
   const parsedPage = page ? parseInt(page as string) : 1
