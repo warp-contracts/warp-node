@@ -4,7 +4,7 @@ import {cachedOtherPeers} from "../tasks/otherPeersCache";
 import {cachedContractGroups, cachedContracts, cachedEvaluatedContracts} from "../tasks/contractsCache";
 
 export const ehloRoute = async (ctx: Router.RouterContext) => {
-  ctx.body = {
+  let result = {
     ...ctx.node.nodeData,
     consensusParams: cachedConsensusParams,
     otherNodes: cachedOtherPeers,
@@ -12,4 +12,18 @@ export const ehloRoute = async (ctx: Router.RouterContext) => {
     contractGroups: cachedContractGroups,
     evaluatedContracts: cachedEvaluatedContracts
   };
+  if (cachedEvaluatedContracts!!.length < 100) {
+    result = {
+      ...result,
+      evaluatedContracts: cachedEvaluatedContracts
+    }
+  } else {
+    result = {
+      ...result,
+      evaluatedContracts: cachedEvaluatedContracts?.length
+    }
+  }
+
+  ctx.body = result;
 };
+
