@@ -321,7 +321,7 @@ export class ExecutionNode {
           node.evaluating = false;
         }
         workerLoop();
-      }, 5000);
+      }, 3000);
     })();
   }
 

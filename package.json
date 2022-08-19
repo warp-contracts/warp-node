@@ -3,7 +3,7 @@
   "version": "1.0.10",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/init.js --port=8080 --testnet='false' --url='http://localhost' --networkId='atomic_nfts_local' --networkContractId='f4skRMstoodrRluvl4OCY-Xo50AamgxYwBCZKzw3Uvo'",
+    "start": "node dist/init.js --port=8080 --testnet='false' --url='http://localhost' --networkId='all_pst_local' --networkContractId='f4skRMstoodrRluvl4OCY-Xo50AamgxYwBCZKzw3Uvo'",
     "format": "prettier --write ."
   },
   "license": "MIT",

@@ -78,6 +78,7 @@ const argv = yargs(hideBin(process.argv)).parseSync();
   process
     .on('unhandledRejection', (reason, p) => {
       logger.error('Unhandled Rejection at Promise', reason);
+      process.exit(0);
     })
     .on('uncaughtException', err => {
       logger.error('Uncaught Exception thrown', err);
