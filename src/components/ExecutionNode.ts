@@ -321,7 +321,7 @@ export class ExecutionNode {
           node.evaluating = false;
         }
         workerLoop();
-      }, 3000);
+      }, 30000); // TODO: make timeout configurable
     })();
   }
 
