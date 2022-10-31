@@ -1,0 +1,15 @@
+{
+  "name": "warp-contract-cache-refresh",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "docker build -t 731675056359.dkr.ecr.eu-north-1.amazonaws.com/warp-contract-update .",
+    "push": "docker push 731675056359.dkr.ecr.eu-north-1.amazonaws.com/warp-contract-update",
+    "buildAndPush": "yarn build && yarn push",
+    "buildAndPush:m1": "docker buildx build --platform linux/amd64 --push -t 731675056359.dkr.ecr.eu-north-1.amazonaws.com/warp-contract-update ."
+  },
+  "dependencies": {
+    "warp-contracts": "1.2.13"
+  }
+}

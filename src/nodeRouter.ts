@@ -10,6 +10,7 @@ const nodeRouter = new Router();
 nodeRouter.get("/ehlo", ehloRoute);
 nodeRouter.get("/state", state);
 nodeRouter.get("/gossip", gossipRoute);
+// nodeRouter.get("/schedule-update", scheduleUpdate);
 
 nodeRouter.get("/balances", walletBalances);
 nodeRouter.get("/all-states", allStates);
