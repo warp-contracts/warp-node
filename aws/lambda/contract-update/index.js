@@ -1,19 +1,32 @@
-const {WarpFactory, defaultCacheOptions, LoggerFactory} = require("warp-contracts");
+const {WarpFactory, defaultCacheOptions, LoggerFactory, defaultWarpGwOptions, LmdbCache} = require("warp-contracts");
+const Arweave = require("arweave");
 
 const efsPath = process.env.EFS_PATH;
 
 LoggerFactory.INST.logLevel('info');
 LoggerFactory.INST.logLevel('debug', 'HandlerBasedContract');
-const logger = LoggerFactory.INST.create('lambda');
+const logger = LoggerFactory.INST.create('l-update');
 
-const warp = WarpFactory.forMainnet({
-  ...defaultCacheOptions,
-  dbLocation: `${efsPath}/cache/warp`
+const arweave = Arweave.init({
+  host: 'arweave.net',
+  port: 443, // Port
+  protocol: 'https', // Network protocol http or https
+  timeout: 60000, // Network request timeouts in milliseconds
+  logging: false // Enable network request logging
 });
 
+const cacheOptions = {
+  ...defaultCacheOptions,
+  dbLocation: `${efsPath}/cache/warp/lmdb`
+}
+
+const warp = WarpFactory
+  .custom(arweave, cacheOptions, 'mainnet', new LmdbCache(cacheOptions))
+  .useWarpGateway(defaultWarpGwOptions, defaultCacheOptions)
+  .build();
+
+
 exports.handler = async function (_event, _context) {
-  // logger.info(JSON.stringify(_event));
-  // logger.info(JSON.stringify(_context));
   const sns = _event.Records[0]["Sns"];
   const message = JSON.parse(sns.Message);
 
@@ -38,14 +51,12 @@ exports.handler = async function (_event, _context) {
 
     logger.info('Connecting to contract');
 
-    /*const warp = WarpFactory.forMainnet({
-      ...defaultCacheOptions,
-      dbLocation: `${efsPath}`
-    });*/
-
     const contract = warp
       .contract(contractTxId)
-      .setEvaluationOptions(options);
+      .setEvaluationOptions({
+        ...options,
+        useVM2: true
+      });
 
     logger.info('Reading state', contractTxId);
 

@@ -1,5 +1,5 @@
 {
-  "name": "warp-contract-cache-refresh",
+  "name": "warp-contract-get",
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
@@ -10,6 +10,7 @@
     "buildAndPush:m1": "docker buildx build --platform linux/amd64 --push -t 731675056359.dkr.ecr.eu-north-1.amazonaws.com/warp-contract-update ."
   },
   "dependencies": {
-    "warp-contracts": "1.2.13"
+    "arweave": "1.11.6",
+    "warp-contracts": "1.2.14-lambda.4"
   }
 }

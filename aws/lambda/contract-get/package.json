@@ -1,0 +1,16 @@
+{
+  "name": "warp-contract-get",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "docker build -t 731675056359.dkr.ecr.eu-north-1.amazonaws.com/warp-contract-get .",
+    "push": "docker push 731675056359.dkr.ecr.eu-north-1.amazonaws.com/warp-contract-get",
+    "buildAndPush": "yarn build && yarn push",
+    "buildAndPush:m1": "docker buildx build --platform linux/amd64 --push -t 731675056359.dkr.ecr.eu-north-1.amazonaws.com/warp-contract-get ."
+  },
+  "dependencies": {
+    "arweave": "1.11.6",
+    "warp-contracts": "1.2.14-lambda.4"
+  }
+}
