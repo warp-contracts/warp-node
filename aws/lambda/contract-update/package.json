@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "arweave": "1.11.6",
-    "warp-contracts": "1.2.14-lambda.7",
-    "warp-contracts-lmdb": "1.0.3",
+    "warp-contracts": "1.2.14-lambda.8",
+    "warp-contracts-lmdb": "1.0.4",
     "warp-contracts-pubsub": "1.0.3",
     "ws": "8.10.0"
   }

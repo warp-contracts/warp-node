@@ -1,3 +1,4 @@
+const responder = require('responder');
 const {WarpFactory, defaultCacheOptions, LoggerFactory, defaultWarpGwOptions} = require("warp-contracts");
 const Arweave = require("arweave");
 const {initPubSub, publish} = require("warp-contracts-pubsub");
@@ -12,8 +13,6 @@ LoggerFactory.INST.logLevel('info');
 LoggerFactory.INST.logLevel('debug', 'HandlerBasedContract');
 const logger = LoggerFactory.INST.create('l-update');
 
-const byteSize = str => new Blob([str]).size;
-
 const arweave = Arweave.init({
   host: 'arweave.net',
   port: 443, // Port
@@ -22,27 +21,30 @@ const arweave = Arweave.init({
   logging: false // Enable network request logging
 });
 
-const cacheOptions = {
-  ...defaultCacheOptions,
-  dbLocation: `${efsPath}/cache/warp/lmdb-2`
-}
-
 const warp = WarpFactory
-  .custom(arweave, cacheOptions, 'mainnet', new LmdbCache({
-    ...cacheOptions,
-    dbLocation: `${efsPath}/cache/warp/lmdb-2/contracts`
+  .custom(arweave, defaultCacheOptions, 'mainnet', new LmdbCache({
+    ...defaultCacheOptions,
+    dbLocation: `${efsPath}/cache/warp/lmdb-5/state`
   }))
-  .useWarpGateway(defaultWarpGwOptions, defaultCacheOptions,)
+  .useWarpGateway(defaultWarpGwOptions, defaultCacheOptions, new LmdbCache({
+    ...defaultCacheOptions,
+    dbLocation: `${efsPath}/cache/warp/lmdb-5/contracts`
+  }))
   .build();
-
 
 exports.handler = async function (_event, _context) {
   const contractTxId = _event.queryStringParameters.contractTxId;
+  const refresh = _event.queryStringParameters.refresh === 'true';
 
   try {
+    if (refresh) {
+      logger.info('Refreshing cache');
+      await warp.stateEvaluator.latestAvailableState(contractTxId);
+      return responder.success(`Cache refreshed.`);
+    }
+
     logger.info('Updating state for', {
-      efsPath,
-      contractTxId,
+      contractTxId
     });
     if (!isTxIdValid(contractTxId)) {
       logger.error(`${contractTxId} is not a valid tx identifier`);
@@ -61,9 +63,12 @@ exports.handler = async function (_event, _context) {
     logger.info('Reading state', contractTxId);
 
     const result = await contract.readState();
+    logger.debug(`Result for ${contractTxId}`, {
+      sortKey: result.sortKey
+    });
 
     const stateAsString = JSON.stringify(result.cachedValue.state);
-    const stateSize = byteSize(stateAsString);
+    const stateSize = Buffer.byteLength(stateAsString, "utf-8");
 
     const pubMessage = {
       contractTxId,
@@ -76,13 +81,14 @@ exports.handler = async function (_event, _context) {
     }
 
     const publishResult = await publish(contractTxId, JSON.stringify(pubMessage), authTokenAppSync);
-    logger.debug(`Result for ${contractTxId}`, {
-      sortKey: result.sortKey,
-      publishResult
-    });
-    logger.info("Update complete.")
+    logger.info("Message published.");
+
+    logger.info("Update complete.");
+
+    return responder.success(`Contract ${contractTxId} updated.`);
   } catch (e) {
     logger.error(`Error while refreshing contract cache`, e);
+    return responder.internalServerError(e);
   }
 };
 

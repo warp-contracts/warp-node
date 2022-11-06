@@ -1712,10 +1712,10 @@ vm2@3.9.9:
     acorn "^8.7.0"
     acorn-walk "^8.2.0"
 
-warp-contracts-lmdb@1.0.3:
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/warp-contracts-lmdb/-/warp-contracts-lmdb-1.0.3.tgz#2a7a0276240612f03e95330a8b96b0170141e284"
-  integrity sha512-XcEHNyWUINTYZPBGdVSUFmLoDCqgCW1/OS67vKNIeejSEbM9YF/o5uqHl4Z20EUFnsa1GgaG9qA9mGcl0S8H6A==
+warp-contracts-lmdb@1.0.4:
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/warp-contracts-lmdb/-/warp-contracts-lmdb-1.0.4.tgz#49350b5e11e5b49564a839529365149b3c0c01e5"
+  integrity sha512-8olZXkOJpE2+In2Td0SAoMjbB8PZqk7FE6jGHaoRh1yVACo6nYdfSGMFEU5ZAX0ZnfKeroCiou85TRPF6Zs59A==
   dependencies:
     lmdb "^2.6.9"
     warp-contracts "1.2.14-lambda.6"
@@ -1745,10 +1745,10 @@ warp-contracts@1.2.14-lambda.6:
     unzipit "^1.4.0"
     vm2 "3.9.9"
 
-warp-contracts@1.2.14-lambda.7:
-  version "1.2.14-lambda.7"
-  resolved "https://registry.yarnpkg.com/warp-contracts/-/warp-contracts-1.2.14-lambda.7.tgz#782dfe4da907a8b2a91cb006150e648c6768f660"
-  integrity sha512-rbhjoaBK/u5MuJiudEvRqBUUO3e/JMS/7woR47nTYLLDGLiOUSC8huh2NFSO17W3t5FHe++Oh7T1qike5XOuBA==
+warp-contracts@1.2.14-lambda.8:
+  version "1.2.14-lambda.8"
+  resolved "https://registry.yarnpkg.com/warp-contracts/-/warp-contracts-1.2.14-lambda.8.tgz#7ebb809250cb166dc239f71f50a206466d633d62"
+  integrity sha512-vXrKMV/5lPglcURBXn3OzZFrTA/fLXbOG7cZ960Yahm1QbDdI//p3ZRECgtd+gdBplzp3a2QcGJVUnNjlngKxA==
   dependencies:
     "@assemblyscript/loader" "^0.19.23"
     "@idena/vrf-js" "^1.0.1"

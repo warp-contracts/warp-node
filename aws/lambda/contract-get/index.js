@@ -17,21 +17,12 @@ const arweave = Arweave.init({
   logging: false // Enable network request logging
 });
 
-const cacheOptions = {
-  ...defaultCacheOptions,
-  dbLocation: `${efsPath}/cache/warp/lmdb-2`
-}
-
-const warp = WarpFactory
-  .custom(arweave, cacheOptions, 'mainnet', new LmdbCache(cacheOptions))
-  .useWarpGateway(defaultWarpGwOptions, defaultCacheOptions)
-  .build();
-
 exports.handler = async function (_event, _context) {
-  logger.info(`Get source`, _context);
-
   try {
     const contractTxId = _event.queryStringParameters.contractTxId;
+    const withState = _event.queryStringParameters.state !== 'false';
+    const withValidity = _event.queryStringParameters.validity === 'true';
+    const withErrorMessage = _event.queryStringParameters.errorMessages === 'true';
 
     logger.info('Getting state for', {
       efsPath,
@@ -42,17 +33,31 @@ exports.handler = async function (_event, _context) {
       return;
     }
 
-    logger.info('Connecting to contract');
-    const result = await getState(contractTxId);
+    const warp = WarpFactory
+      .custom(arweave, defaultCacheOptions, 'mainnet', new LmdbCache({
+        ...defaultCacheOptions,
+        dbLocation: `${efsPath}/cache/warp/lmdb-5/state`
+      }))
+      .useWarpGateway(defaultWarpGwOptions, defaultCacheOptions, new LmdbCache({
+        ...defaultCacheOptions,
+        dbLocation: `${efsPath}/cache/warp/lmdb-5/contracts`
+      }))
+      .build();
+
+    logger.info('Connecting to contractt', contractTxId);
+    const result = await warp.stateEvaluator.latestAvailableState(contractTxId);
 
     if (result) {
       logger.debug(`Result for ${contractTxId}`, {
         sortKey: result.sortKey,
-        cachedValue: result.cachedValue
       });
       logger.info("Get complete.");
-
-      return responder.success(result);
+      return responder.success({
+        sortKey: result.sortKey,
+        ...(withState ? { state: result.cachedValue.state } : ''),
+        ...(withValidity ? { validity: result.cachedValue.validity } : ''),
+        ...(withErrorMessage ? { errorMessages: result.cachedValue.errorMessages } : '')
+      });
     } else {
       return responder.internalServerError(`State not available for contract ${contractTxId}`);
     }
@@ -61,10 +66,6 @@ exports.handler = async function (_event, _context) {
     return responder.internalServerError(e);
   }
 };
-
-async function getState(contractTxId) {
-  return await warp.stateEvaluator.latestAvailableState(contractTxId);
-}
 
 function isTxIdValid(txId) {
   const validTxIdRegex = /[a-z0-9_-]{43}/i;

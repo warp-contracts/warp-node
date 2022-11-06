@@ -3,11 +3,11 @@ global.WebSocket = require('ws');
 
 initPubSub();
 async function sub() {
-  const subscription = await subscribe('5Yt1IujBmOm1LSux9KDUTjCE7rJqepzP7gZKf_DyzWI', ({data}) => {
-    console.log('new message', data);
+  const subscription = await subscribe('EdTDa1qwnu_g1GMHOkP9X1Hn2qZt65P5VKyMXkLDaTA', ({data}) => {
+    console.log(' ==== new message ==== ');
+    console.dir(data);
   });
-  console.log(subscription);
-
+  console.log('waiting for messages...');
 }
 
 sub().then().catch((e) => {
