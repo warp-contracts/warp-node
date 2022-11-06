@@ -1,11 +1,18 @@
-const {WarpFactory, defaultCacheOptions, LoggerFactory, defaultWarpGwOptions, LmdbCache} = require("warp-contracts");
+const {WarpFactory, defaultCacheOptions, LoggerFactory, defaultWarpGwOptions} = require("warp-contracts");
 const Arweave = require("arweave");
+const {initPubSub, publish} = require("warp-contracts-pubsub");
+const {LmdbCache} = require("warp-contracts-lmdb");
+
+initPubSub();
 
 const efsPath = process.env.EFS_PATH;
+const authTokenAppSync = process.env.AUTH_TOKEN;
 
 LoggerFactory.INST.logLevel('info');
 LoggerFactory.INST.logLevel('debug', 'HandlerBasedContract');
 const logger = LoggerFactory.INST.create('l-update');
+
+const byteSize = str => new Blob([str]).size;
 
 const arweave = Arweave.init({
   host: 'arweave.net',
@@ -17,32 +24,25 @@ const arweave = Arweave.init({
 
 const cacheOptions = {
   ...defaultCacheOptions,
-  dbLocation: `${efsPath}/cache/warp/lmdb`
+  dbLocation: `${efsPath}/cache/warp/lmdb-2`
 }
 
 const warp = WarpFactory
-  .custom(arweave, cacheOptions, 'mainnet', new LmdbCache(cacheOptions))
-  .useWarpGateway(defaultWarpGwOptions, defaultCacheOptions)
+  .custom(arweave, cacheOptions, 'mainnet', new LmdbCache({
+    ...cacheOptions,
+    dbLocation: `${efsPath}/cache/warp/lmdb-2/contracts`
+  }))
+  .useWarpGateway(defaultWarpGwOptions, defaultCacheOptions,)
   .build();
 
 
 exports.handler = async function (_event, _context) {
-  const sns = _event.Records[0]["Sns"];
-  const message = JSON.parse(sns.Message);
-
-  logger.info(`Update source`, {
-    messageId: sns.MessageId,
-    timestamp: sns.Timestamp
-  });
+  const contractTxId = _event.queryStringParameters.contractTxId;
 
   try {
-    const contractTxId = message.contractTxId;
-    const options = message.evaluationOptions || {};
-
     logger.info('Updating state for', {
       efsPath,
       contractTxId,
-      options,
     });
     if (!isTxIdValid(contractTxId)) {
       logger.error(`${contractTxId} is not a valid tx identifier`);
@@ -54,7 +54,7 @@ exports.handler = async function (_event, _context) {
     const contract = warp
       .contract(contractTxId)
       .setEvaluationOptions({
-        ...options,
+        allowBigInt: true,
         useVM2: true
       });
 
@@ -62,13 +62,27 @@ exports.handler = async function (_event, _context) {
 
     const result = await contract.readState();
 
+    const stateAsString = JSON.stringify(result.cachedValue.state);
+    const stateSize = byteSize(stateAsString);
+
+    const pubMessage = {
+      contractTxId,
+      stateSize,
+      sortKey: result.sortKey,
+      timestamp: new Date().getTime()
+    };
+    if (stateSize < 950_000) {
+      pubMessage.state = result.cachedValue.state;
+    }
+
+    const publishResult = await publish(contractTxId, JSON.stringify(pubMessage), authTokenAppSync);
     logger.debug(`Result for ${contractTxId}`, {
       sortKey: result.sortKey,
-      cachedValue: result.cachedValue
+      publishResult
     });
     logger.info("Update complete.")
   } catch (e) {
-    logger.error(`Error while refreshing contract cache: ${e}.`);
+    logger.error(`Error while refreshing contract cache`, e);
   }
 };
 

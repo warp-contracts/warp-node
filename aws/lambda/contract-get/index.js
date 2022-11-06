@@ -1,6 +1,7 @@
 const responder = require('responder');
-const {WarpFactory, defaultWarpGwOptions, defaultCacheOptions, LmdbCache, LoggerFactory} = require("warp-contracts");
+const {WarpFactory, defaultWarpGwOptions, defaultCacheOptions, LoggerFactory} = require("warp-contracts");
 const Arweave = require("arweave");
+const {LmdbCache} = require("warp-contracts-lmdb");
 
 const efsPath = process.env.EFS_PATH;
 
@@ -18,7 +19,7 @@ const arweave = Arweave.init({
 
 const cacheOptions = {
   ...defaultCacheOptions,
-  dbLocation: `${efsPath}/cache/warp/lmdb`
+  dbLocation: `${efsPath}/cache/warp/lmdb-2`
 }
 
 const warp = WarpFactory
@@ -27,8 +28,6 @@ const warp = WarpFactory
   .build();
 
 exports.handler = async function (_event, _context) {
-  // logger.info(JSON.stringify(_event));
-  //  logger.info(JSON.stringify(_context));
   logger.info(`Get source`, _context);
 
   try {
@@ -46,15 +45,19 @@ exports.handler = async function (_event, _context) {
     logger.info('Connecting to contract');
     const result = await getState(contractTxId);
 
-    logger.debug(`Result for ${contractTxId}`, {
-      sortKey: result.sortKey,
-      cachedValue: result.cachedValue
-    });
-    logger.info("Get complete.");
+    if (result) {
+      logger.debug(`Result for ${contractTxId}`, {
+        sortKey: result.sortKey,
+        cachedValue: result.cachedValue
+      });
+      logger.info("Get complete.");
 
-    return responder.success(result);
+      return responder.success(result);
+    } else {
+      return responder.internalServerError(`State not available for contract ${contractTxId}`);
+    }
   } catch (e) {
-    logger.error(`Error while getting contract cache: ${e}.`);
+    logger.error(`Error while getting contract cache:`, e);
     return responder.internalServerError(e);
   }
 };

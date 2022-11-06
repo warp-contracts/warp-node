@@ -594,6 +594,11 @@ fast-copy@^2.1.1:
   resolved "https://registry.yarnpkg.com/fast-copy/-/fast-copy-2.1.7.tgz#affc9475cb4b555fb488572b2a44231d0c9fa39e"
   integrity sha512-ozrGwyuCTAy7YgFCua8rmqmytECYk/JYAMXcswOcm0qvGoE3tPb7ivBeIHTOK2DiapBhDZgacIhzhQIKU5TCfA==
 
+fast-copy@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/fast-copy/-/fast-copy-3.0.0.tgz#875ebf33b13948ae012b6e51d33da5e6e7571ab8"
+  integrity sha512-4HzS+9pQ5Yxtv13Lhs1Z1unMXamBdn5nA4bEi1abYpDNSpSp7ODYQ1KPMF6nTatfEzgH6/zPvXKU1zvHiUjWlA==
+
 fill-range@^7.0.1:
   version "7.0.1"
   resolved "https://registry.yarnpkg.com/fill-range/-/fill-range-7.0.1.tgz#1919a6a7c75fe38b2c7c77e5198535da9acdda40"
@@ -1707,10 +1712,18 @@ vm2@3.9.9:
     acorn "^8.7.0"
     acorn-walk "^8.2.0"
 
-warp-contracts@1.2.14-lambda.4:
-  version "1.2.14-lambda.4"
-  resolved "https://registry.yarnpkg.com/warp-contracts/-/warp-contracts-1.2.14-lambda.4.tgz#e2fc5a31a74c952af7aae3c31f0cd8c7ed3bcca7"
-  integrity sha512-WW02JzNYXe6J/MHLuNGcwlKDMBlQWuB4G14cpJvWC5gvmFBk9Lvo+3zSe6hwrt2KtPgu5p5pb+FFVQD1pCDxLg==
+warp-contracts-lmdb@1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/warp-contracts-lmdb/-/warp-contracts-lmdb-1.0.3.tgz#2a7a0276240612f03e95330a8b96b0170141e284"
+  integrity sha512-XcEHNyWUINTYZPBGdVSUFmLoDCqgCW1/OS67vKNIeejSEbM9YF/o5uqHl4Z20EUFnsa1GgaG9qA9mGcl0S8H6A==
+  dependencies:
+    lmdb "^2.6.9"
+    warp-contracts "1.2.14-lambda.6"
+
+warp-contracts@1.2.14-lambda.6:
+  version "1.2.14-lambda.6"
+  resolved "https://registry.yarnpkg.com/warp-contracts/-/warp-contracts-1.2.14-lambda.6.tgz#5f709b537e6dd27401c38a981dd11fd34b73ab82"
+  integrity sha512-DnwKhorbJGKGwqunCleVJoPLhYwsopK3QtqjwT6bXGpNo2jxEOWaMrYzAoihFnkWKfNRpADnrlJVcCb0ExP0gA==
   dependencies:
     "@assemblyscript/loader" "^0.19.23"
     "@idena/vrf-js" "^1.0.1"
@@ -1723,6 +1736,30 @@ warp-contracts@1.2.14-lambda.4:
     knex "^0.95.14"
     level "^8.0.0"
     lmdb "^2.6.9"
+    lodash "^4.17.21"
+    memory-level "^1.0.0"
+    redstone-isomorphic "1.1.8"
+    redstone-wasm-metering "1.0.3"
+    safe-stable-stringify "2.3.1"
+    stream-buffers "^3.0.2"
+    unzipit "^1.4.0"
+    vm2 "3.9.9"
+
+warp-contracts@1.2.14-lambda.7:
+  version "1.2.14-lambda.7"
+  resolved "https://registry.yarnpkg.com/warp-contracts/-/warp-contracts-1.2.14-lambda.7.tgz#782dfe4da907a8b2a91cb006150e648c6768f660"
+  integrity sha512-rbhjoaBK/u5MuJiudEvRqBUUO3e/JMS/7woR47nTYLLDGLiOUSC8huh2NFSO17W3t5FHe++Oh7T1qike5XOuBA==
+  dependencies:
+    "@assemblyscript/loader" "^0.19.23"
+    "@idena/vrf-js" "^1.0.1"
+    archiver "^5.3.0"
+    arweave "1.11.6"
+    bignumber.js "^9.0.1"
+    elliptic "^6.5.4"
+    events "3.3.0"
+    fast-copy "^3.0.0"
+    knex "^0.95.14"
+    level "^8.0.0"
     lodash "^4.17.21"
     memory-level "^1.0.0"
     redstone-isomorphic "1.1.8"
