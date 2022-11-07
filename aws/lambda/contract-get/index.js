@@ -17,12 +17,25 @@ const arweave = Arweave.init({
   logging: false // Enable network request logging
 });
 
+const warp = WarpFactory
+  .custom(arweave, defaultCacheOptions, 'mainnet', new LmdbCache({
+    ...defaultCacheOptions,
+    dbLocation: `${efsPath}/cache/warp/lmdb-5/state`
+  }))
+  .useWarpGateway(defaultWarpGwOptions, defaultCacheOptions, new LmdbCache({
+    ...defaultCacheOptions,
+    dbLocation: `${efsPath}/cache/warp/lmdb-5/contracts`
+  }))
+  .build();
+
 exports.handler = async function (_event, _context) {
   try {
     const contractTxId = _event.queryStringParameters.contractTxId;
     const withState = _event.queryStringParameters.state !== 'false';
     const withValidity = _event.queryStringParameters.validity === 'true';
     const withErrorMessage = _event.queryStringParameters.errorMessages === 'true';
+
+    logger.info('Version 1');
 
     logger.info('Getting state for', {
       efsPath,
@@ -33,18 +46,7 @@ exports.handler = async function (_event, _context) {
       return;
     }
 
-    const warp = WarpFactory
-      .custom(arweave, defaultCacheOptions, 'mainnet', new LmdbCache({
-        ...defaultCacheOptions,
-        dbLocation: `${efsPath}/cache/warp/lmdb-5/state`
-      }))
-      .useWarpGateway(defaultWarpGwOptions, defaultCacheOptions, new LmdbCache({
-        ...defaultCacheOptions,
-        dbLocation: `${efsPath}/cache/warp/lmdb-5/contracts`
-      }))
-      .build();
-
-    logger.info('Connecting to contractt', contractTxId);
+    logger.info('Connecting to contract', contractTxId);
     const result = await warp.stateEvaluator.latestAvailableState(contractTxId);
 
     if (result) {
